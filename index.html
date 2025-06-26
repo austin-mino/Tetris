@@ -5,21 +5,91 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>🎮 테트리스</title>
   <style>
-    :root { --cell: 30px; --gap: 1px; --bg: #0e0e0e; --active: #4fc3f7; --frozen: #1565c0; }
-    body {margin:0;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;background:var(--bg);color:#fff;}
-    h1{margin:20px 0 10px}
-    #info{display:flex;gap:20px;align-items:center}
-    #score{font-size:1.2rem}
-    #game{display:grid;gap:var(--gap);background:#111;margin-top:10px;touch-action:none}
-    .cell{width:var(--cell);height:var(--cell);background:#1e1e1e}
-    .active{background:var(--active)}
-    .frozen{background:var(--frozen)}
-    #controls{margin:15px 0;display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,60px);gap:10px;user-select:none}
-    .btn{background:#333;border:2px solid #555;border-radius:8px;color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center}
-    .btn:active{background:#555}
-    #startBtn{margin-top:10px;padding:8px 14px;font-size:1rem;border:none;border-radius:6px;background:#4caf50;color:#fff;cursor:pointer}
-    @media(hover:hover){#controls{display:none}}
-    @media(max-width:480px){:root{--cell:24px;}#controls{grid-template-columns:repeat(3,50px);grid-template-rows:repeat(2,50px);} .btn{font-size:1.2rem;} #startBtn{font-size:.95rem;padding:6px 12px;} }
+    :root {
+      --cell: 30px;
+      --gap: 1px;
+      --bg: #121212;
+      --grid: #292929;
+      --T: #ba68c8;
+      --O: #fbc02d;
+      --I: #00bcd4;
+      --S: #66bb6a;
+      --Z: #ef5350;
+      --L: #ffa726;
+      --J: #42a5f5;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg);
+      color: white;
+    }
+    h1 { margin: 20px 0 10px; }
+    #info { display: flex; gap: 20px; align-items: center; }
+    #score { font-size: 1.2rem; }
+    #game {
+      display: grid;
+      gap: var(--gap);
+      background: var(--grid);
+      margin-top: 10px;
+      touch-action: none;
+    }
+    .cell {
+      width: var(--cell);
+      height: var(--cell);
+      background: #1e1e1e;
+      border: 1px solid #222;
+    }
+    .active { background: white; }
+    .frozen-T { background: var(--T); }
+    .frozen-O { background: var(--O); }
+    .frozen-I { background: var(--I); }
+    .frozen-S { background: var(--S); }
+    .frozen-Z { background: var(--Z); }
+    .frozen-L { background: var(--L); }
+    .frozen-J { background: var(--J); }
+    #controls {
+      margin: 15px 0;
+      display: grid;
+      grid-template-columns: repeat(3, 60px);
+      grid-template-rows: repeat(2, 60px);
+      gap: 10px;
+      user-select: none;
+    }
+    .btn {
+      background: #333;
+      border: 2px solid #555;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn:active { background: #555; }
+    #startBtn {
+      margin-top: 10px;
+      padding: 8px 14px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background: #4caf50;
+      color: #fff;
+      cursor: pointer;
+    }
+    @media (hover:hover) { #controls { display: none; } }
+    @media (max-width: 480px) {
+      :root { --cell: 24px; }
+      #controls {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(2, 50px);
+      }
+      .btn { font-size: 1.2rem; }
+      #startBtn { font-size: 0.95rem; padding: 6px 12px; }
+    }
   </style>
 </head>
 <body>
@@ -32,6 +102,7 @@
     <div class="btn" id="rotate">🔄</div>
     <div class="btn" id="right">➡️</div>
     <div class="btn" style="grid-column:2/3" id="down">⬇️</div>
+    <div class="btn" style="grid-column:2/3" id="drop">🧨</div>
   </div>
 <script>
 const rows=20,cols=10,game=document.getElementById('game');
@@ -39,9 +110,21 @@ const startBtn=document.getElementById('startBtn');
 const info=document.getElementById('info');
 const scoreEl=document.getElementById('score');
 const controls=document.getElementById('controls');
-let cells=[],currentSet,current,pos,rot,score=0,interval=700,dropTimer,playing=false;
-function buildGrid(){game.innerHTML='';cells=[];game.style.gridTemplateColumns=`repeat(${cols}, var(--cell))`;game.style.gridTemplateRows=`repeat(${rows}, var(--cell))`;for(let i=0;i<rows*cols;i++){const d=document.createElement('div');d.className='cell';game.appendChild(d);cells.push(d);} }
-// shape rotations (SRS-ish)
+let cells=[],currentSet,current,pos,rot,score=0,interval=700,dropTimer,playing=false,currentName='T';
+
+function buildGrid(){
+  game.innerHTML='';
+  cells=[];
+  game.style.gridTemplateColumns=`repeat(${cols}, var(--cell))`;
+  game.style.gridTemplateRows=`repeat(${rows}, var(--cell))`;
+  for(let i=0;i<rows*cols;i++){
+    const d=document.createElement('div');
+    d.className='cell';
+    game.appendChild(d);
+    cells.push(d);
+  }
+}
+
 const T=[[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]];
 const O=[[0,1,cols,cols+1]];
 const I=[[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]];
@@ -49,24 +132,24 @@ const S=[[1,2,cols,cols+1],[0,cols,cols+1,cols*2]];
 const Z=[[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]];
 const L=[[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]];
 const J=[[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]];
-const SHAPES=[T,O,I,S,Z,L,J];
-function randomShape(){const s=SHAPES[Math.floor(Math.random()*SHAPES.length)];return{shape:s,rot:0};}
+const SHAPES=[['T',T],['O',O],['I',I],['S',S],['Z',Z],['L',L],['J',J]];
+function randomShape(){const s=SHAPES[Math.floor(Math.random()*SHAPES.length)];return{name:s[0],shape:s[1],rot:0};}
 let next=randomShape();
-function draw(){current.forEach(i=>cells[pos+i]?.classList.add('active'));}
-function undraw(){current.forEach(i=>cells[pos+i]?.classList.remove('active'));}
-function freeze(){current.forEach(i=>cells[pos+i]?.classList.replace('active','frozen'));}
-function spawn(){({shape:currentSet,rot}=next);next=randomShape();current=currentSet[rot];pos=3;if(current.some(i=>cells[pos+i].classList.contains('frozen'))){alert('게임 오버!');stopGame();return;}draw();}
-function valid(test,offset){return test.every(i=>{const ni=pos+offset+i;return ni>=0&&ni<rows*cols&&(ni%cols)>=0&&(ni%cols)<cols&&!cells[ni].classList.contains('frozen');});}
-function rotate(){if(!playing)return;undraw();const nextRot=(rot+1)%currentSet.length;const test=currentSet[nextRot];const kicks=[0,-1,1,-2,2,-cols];let moved=false;for(const off of kicks){if(valid(test,off)){pos+=off;rot=nextRot;current=test;moved=true;break;}}draw();}
-function move(dx){if(!playing)return;undraw();if(valid(current,dx)){pos+=dx;}draw();}
+function draw(){current.forEach(i=>cells[pos+i]?.classList.add('active'))}
+function undraw(){current.forEach(i=>cells[pos+i]?.classList.remove('active'))}
+function freeze(){current.forEach(i=>cells[pos+i]?.classList.replace('active',`frozen-${currentName}`))}
+function spawn(){({shape:currentSet,rot,currentName}=next);next=randomShape();current=currentSet[rot];pos=3;if(current.some(i=>cells[pos+i].classList.contains('frozen-T')||cells[pos+i].classList.contains('frozen-O')||cells[pos+i].classList.contains('frozen-I')||cells[pos+i].classList.contains('frozen-S')||cells[pos+i].classList.contains('frozen-Z')||cells[pos+i].classList.contains('frozen-L')||cells[pos+i].classList.contains('frozen-J'))){alert('게임 오버!');stopGame();return;}draw();}
+function valid(test,offset){return test.every(i=>{const ni=pos+offset+i;const x=ni%cols,y=Math.floor(ni/cols);return ni>=0&&ni<rows*cols&&x>=0&&x<cols&&y>=0&&y<rows&&!cells[ni].classList.contains('frozen-T')&&!cells[ni].classList.contains('frozen-O')&&!cells[ni].classList.contains('frozen-I')&&!cells[ni].classList.contains('frozen-S')&&!cells[ni].classList.contains('frozen-Z')&&!cells[ni].classList.contains('frozen-L')&&!cells[ni].classList.contains('frozen-J');});}
+function rotate(){if(!playing)return;undraw();const nextRot=(rot+1)%currentSet.length;const test=currentSet[nextRot];const kicks=[0,-1,1,-2,2,-cols];for(const off of kicks){if(valid(test,off)){pos+=off;rot=nextRot;current=test;break;}}draw();}
+function move(dx){if(!playing)return;undraw();if(valid(current,dx))pos+=dx;draw();}
 function moveDown(manual=false){if(!playing)return;undraw();if(!valid(current,cols)){draw();freeze();clearLines();spawn();return;}pos+=cols;draw();if(manual){score++;updateScore();}}
-function clearLines(){for(let r=rows-1;r>=0;r--){if([...Array(cols).keys()].every(c=>cells[r*cols+c].classList.contains('frozen'))){score+=10;updateScore();for(let c=0;c<cols;c++){cells[r*cols+c].classList.remove('frozen');}const removed=cells.splice(r*cols,cols);removed.forEach(cell=>cell.className='cell');cells.unshift(...removed);game.innerHTML='';cells.forEach(c=>game.appendChild(c));r++;}}}
+function hardDrop(){if(!playing)return;while(valid(current,cols)){undraw();pos+=cols;draw();score+=2;}undraw();draw();freeze();clearLines();spawn();updateScore();}
+function clearLines(){for(let r=rows-1;r>=0;r--){if([...Array(cols).keys()].every(c=>{const cell=cells[r*cols+c];return cell.classList.contains('frozen-T')||cell.classList.contains('frozen-O')||cell.classList.contains('frozen-I')||cell.classList.contains('frozen-S')||cell.classList.contains('frozen-Z')||cell.classList.contains('frozen-L')||cell.classList.contains('frozen-J');})){score+=10;updateScore();for(let c=0;c<cols;c++)cells[r*cols+c].className='cell';const removed=cells.splice(r*cols,cols);cells.unshift(...removed);game.innerHTML='';cells.forEach(c=>game.appendChild(c));r++;}}}
 function updateScore(){scoreEl.textContent='점수: '+score;}
-function startGame(){if(playing)return;startBtn.style.display='none';info.style.display='flex';controls.style.display='grid';buildGrid();score=0;updateScore();playing=true;next=randomShape();spawn();dropTimer=setInterval(()=>moveDown(false),interval);}function stopGame(){playing=false;clearInterval(dropTimer);startBtn.style.display='block';controls.style.display='none';}
-// keyboard
-document.addEventListener('keydown',e=>{if(!playing)return;switch(e.key){case'ArrowLeft':move(-1);break;case'ArrowRight':move(1);break;case'ArrowUp':rotate();break;case'ArrowDown':moveDown(true);break;}});
-// touch buttons
-[['left',()=>move(-1)],['right',()=>move(1)],['rotate',rotate],['down',()=>moveDown(true)]].forEach(([id,fn])=>{document.getElementById(id)?.addEventListener('touchstart',e=>{e.preventDefault();fn();});});
+function startGame(){if(playing)return;startBtn.style.display='none';info.style.display='flex';controls.style.display='grid';buildGrid();score=0;updateScore();playing=true;next=randomShape();spawn();dropTimer=setInterval(()=>moveDown(false),interval);}
+function stopGame(){playing=false;clearInterval(dropTimer);startBtn.style.display='block';controls.style.display='none';}
+document.addEventListener('keydown',e=>{if(!playing)return;switch(e.key){case'ArrowLeft':move(-1);break;case'ArrowRight':move(1);break;case'ArrowUp':rotate();break;case'ArrowDown':moveDown(true);break;case' ':e.preventDefault();hardDrop();break;}});
+[['left',()=>move(-1)],['right',()=>move(1)],['rotate',rotate],['down',()=>moveDown(true)],['drop',hardDrop]].forEach(([id,fn])=>{document.getElementById(id)?.addEventListener('touchstart',e=>{e.preventDefault();fn();});});
 startBtn.addEventListener('click',startGame);
 </script>
 </body>
