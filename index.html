@@ -98,9 +98,7 @@
     <div class="btn" style="grid-column:2/3" id="drop">🧨</div>
     <div class="btn" id="holdBtn">⏸️</div>
   </div>
-
-<script>
-/* === 전역 & 헬퍼 === */
+  <script>
 const rows = 20, cols = 10, board = $('#board');
 let grid = [], queue = [], current = null;
 let holdPiece = null, canHold = true;
@@ -200,7 +198,7 @@ function placeGhost(){
   const d=dropDist();
   current.shape().forEach(i=>grid[current.pos+i+d*cols]?.classList.add('ghost'));
 }
-/* === 블록 === */
+    /* === 블록 === */
 function newPiece(){
   current={name:queue.shift(),pos:3,rot:0};
   refill(); canHold=true;
@@ -224,7 +222,7 @@ function delLines(){
     if([...Array(cols)].every(c=>grid[r*cols+c].classList.contains('frozen'))){
       cleared++;
       for(let c=0;c<cols;c++) grid[r*cols+c].className='cell';
-      // 줄 삭제 후 블록 내려오기: grid 배열에서 실제 요소 순서 조작 대신 클래스만 옮기도록 재구성
+      // 줄 삭제 후 블록 내려오기 (클래스만 복사)
       for(let rr=r; rr>0; rr--){
         for(let cc=0; cc<cols; cc++){
           const aboveCell = grid[(rr-1)*cols+cc];
@@ -232,9 +230,8 @@ function delLines(){
           currCell.className = aboveCell.className;
         }
       }
-      // 최상단 행은 빈 칸으로 초기화
       for(let c=0;c<cols;c++) grid[c].className='cell';
-      r++; // 다시 같은 줄 검사
+      r++;
     }
   }
   if(cleared){
@@ -299,11 +296,14 @@ function setGravity(){
     else if(Date.now()-lockTimer>lockDelay) lockPiece();
   }, Math.max(100, baseInterval-(level-1)*50));
 }
-  /* === 게임 컨트롤 === */
+    /* === 게임 컨트롤 === */
 function startGame(){
+  console.log('게임 시작!'); 
   if(playing) return;
-  playing=true; $('#start').style.display='none';
-  $('#wrapper').style.display='flex'; $('#controls').style.display='grid';
+  playing=true; 
+  $('#start').style.display='none';
+  $('#wrapper').style.display='flex'; 
+  $('#controls').style.display='grid';
   score=level=lines=0; hud(); buildGrid(); queue=[]; refill();
   holdPiece=null; canHold=true; drawMini($('#hold'),null);
   newPiece(); setGravity();
@@ -319,8 +319,6 @@ function gameOver(){
 }
 
 /* === 입력 === */
-$('#start').onclick=startGame;
-
 document.addEventListener('keydown',e=>{
   if(!playing) return;
   switch(e.key){
@@ -343,6 +341,10 @@ document.addEventListener('keydown',e=>{
      fn();
    }, { passive:false });
  });
+    /* === DOM 로드 후 초기화 === */
+document.addEventListener('DOMContentLoaded', () => {
+  $('#start').onclick = startGame;
+});
 </script>
 </body>
 </html>
