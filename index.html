@@ -97,8 +97,7 @@
     <div class="btn" style="grid-column:2/3" id="down">⬇️</div>
     <div class="btn" style="grid-column:2/3" id="drop">🧨</div>
     <div class="btn" id="holdBtn">⏸️</div>
-  </div>
-  <script>
+  </div><script>
 const rows = 20, cols = 10, board = $('#board');
 let grid = [], queue = [], current = null;
 let holdPiece = null, canHold = true;
@@ -197,8 +196,7 @@ function placeGhost(){
   clearGhost();
   const d=dropDist();
   current.shape().forEach(i=>grid[current.pos+i+d*cols]?.classList.add('ghost'));
-}
-    /* === 블록 === */
+}/* === 블록 === */
 function newPiece(){
   current={name:queue.shift(),pos:3,rot:0};
   refill(); canHold=true;
@@ -295,8 +293,7 @@ function setGravity(){
     if(!lockTimer) soft();
     else if(Date.now()-lockTimer>lockDelay) lockPiece();
   }, Math.max(100, baseInterval-(level-1)*50));
-}
-    /* === 게임 컨트롤 === */
+}/* === 게임 컨트롤 === */
 function startGame(){
   console.log('게임 시작!'); 
   if(playing) return;
@@ -340,8 +337,7 @@ document.addEventListener('keydown',e=>{
      e.preventDefault();
      fn();
    }, { passive:false });
- });
-    /* === DOM 로드 후 초기화 === */
+ });/* === DOM 로드 후 초기화 === */
 document.addEventListener('DOMContentLoaded', () => {
   $('#start').onclick = startGame;
 });
