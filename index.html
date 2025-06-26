@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>🎮 테트리스</title>
   <style>
     :root {
@@ -13,97 +13,83 @@
       --frozen: #1565c0;
     }
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: var(--bg);
-      color: white;
+      margin: 0; font-family: 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+      background:var(--bg); color:#fff;
     }
-    h1 { margin:20px 0 10px; }
-    #info {display:flex;gap:20px;align-items:center}
-    #score {font-size:1.2rem}
-    #game {
-      display: grid;
-      grid-template-columns: repeat(10, var(--cell));
-      grid-template-rows: repeat(20, var(--cell));
-      gap: var(--gap);
-      background-color: #111;
-      margin-top: 10px;
-      touch-action: none;
-    }
+    h1{margin:20px 0 10px}
+    #info{display:flex;gap:20px;align-items:center}
+    #score{font-size:1.2rem}
+    #game{display:grid;gap:var(--gap);background:#111;margin-top:10px;touch-action:none}
     .cell{width:var(--cell);height:var(--cell);background:#1e1e1e}
     .active{background:var(--active)}
     .frozen{background:var(--frozen)}
-    /* 모바일 터치 컨트롤 */
     #controls{margin:15px 0;display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,60px);gap:10px;user-select:none}
     .btn{background:#333;border:2px solid #555;border-radius:8px;color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center}
     .btn:active{background:#555}
-    @media (hover:hover){#controls{display:none}}
+    #startBtn{margin-top:10px;padding:8px 14px;font-size:1rem;border:none;border-radius:6px;background:#4caf50;color:#fff;cursor:pointer}
+    @media(hover:hover){#controls{display:none}}
   </style>
 </head>
 <body>
   <h1>🎮 테트리스</h1>
-  <div id="info"><span id="score">점수: 0</span></div>
+  <button id="startBtn">게임 시작</button>
+  <div id="info" style="display:none"><span id="score">점수: 0</span></div>
   <div id="game"></div>
-  <div id="controls">
+  <div id="controls" style="display:none">
     <div class="btn" id="left">⬅️</div>
     <div class="btn" id="rotate">🔄</div>
     <div class="btn" id="right">➡️</div>
     <div class="btn" style="grid-column:2/3" id="down">⬇️</div>
   </div>
-  <script>
-  const rows=20,cols=10,game=document.getElementById('game');
-  const scoreEl=document.getElementById('score');
-  const cells=[];
-  for(let i=0;i<rows*cols;i++){const c=document.createElement('div');c.className='cell';game.appendChild(c);cells.push(c);}  
-  let current,pos,rot,score=0,interval=800,dropTimer;
+<script>
+const rows=20,cols=10,game=document.getElementById('game');
+const startBtn=document.getElementById('startBtn');
+const info=document.getElementById('info');
+const scoreEl=document.getElementById('score');
+const controls=document.getElementById('controls');
+let cells=[],current=[],pos=0,rot=0,score=0,interval=800,dropTimer=null,playing=false;
 
-  const SHAPES=[
-    [[1,cols+1,cols*2+1,2],[cols,cols+1,cols+2,cols*2+2],[1,cols+1,cols*2+1,cols*2],[cols,cols*2,cols*2+1,cols*2+2]], //T
-    [[0,1,cols,cols+1]], //O
-    [[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]], //I
-    [[0,1,cols+1,cols+2],[1,cols,cols+1,cols*2],[0,cols,cols+1,cols*2+1],[cols,cols+1,cols*2+1,cols*2+2]], //S
-    [[1,2,cols,cols+1],[0,cols,cols+1,cols*2+1],[1,cols+1,cols+2,cols*2+2],[1,cols,cols+1,cols*2]], //Z
-    [[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,cols*2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]], //L
-    [[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[0,cols,cols*2,cols*2+1],[0,cols,cols+1,cols+2]] //J
-  ];
+function buildGrid(){game.innerHTML='';cells=[];game.style.gridTemplateColumns=`repeat(${cols}, 30px)`;game.style.gridTemplateRows=`repeat(${rows}, 30px)`;for(let i=0;i<rows*cols;i++){const d=document.createElement('div');d.className='cell';game.appendChild(d);cells.push(d);} }
 
-  function draw(){current.forEach(i=>cells[pos+i].classList.add('active'));}
-  function undraw(){current.forEach(i=>cells[pos+i].classList.remove('active'));}
-  function freeze(){current.forEach(i=>cells[pos+i].classList.replace('active','frozen'));}
-  function spawn(){const type=Math.floor(Math.random()*SHAPES.length);current=SHAPES[type];rot=0;pos=3; if(current[rot].some(i=>cells[pos+i].classList.contains('frozen'))){alert('게임 오버!');clearInterval(dropTimer);} draw();}
+// Tetromino rotation templates (relative indexes for 10‑wide grid base)
+const T=[[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]];
+const O=[[0,1,cols,cols+1]];
+const I=[[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]];
+const S=[[1,2,cols,cols+1],[0,cols,cols+1,cols*2],[1,2,cols,cols+1],[0,cols,cols+1,cols*2]];
+const Z=[[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1],[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]];
+const L=[[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]];
+const J=[[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,2*cols+2-cols],[0,cols,cols+1,cols+2]]; // simple placeholder J rotations
+const SHAPES=[T,O,I,S,Z,L,J];
 
-  function rotate(){undraw();rot=(rot+1)%current.length; // 벽 충돌 보정
-    if(current[rot].some(i=> (pos+i)%cols<0 || (pos+i)%cols>=cols || cells[pos+i].classList.contains('frozen'))){rot=(rot+current.length-1)%current.length;} draw();}
+function draw(){current.forEach(i=>cells[pos+i].classList.add('active'));}
+function undraw(){current.forEach(i=>cells[pos+i].classList.remove('active'));}
+function freeze(){current.forEach(i=>cells[pos+i].classList.replace('active','frozen'));}
 
-  function move(dir){undraw();const offset=dir==='left'? -1:1;if(current[rot].some(i=>{const ni=pos+i+offset;return (ni%cols<0)||(ni%cols>=cols)||cells[ni].classList.contains('frozen');})){draw();return;} pos+=offset;draw();}
+function randomShape(){const t=SHAPES[Math.floor(Math.random()*SHAPES.length)];return {shape:t,rot:0};}
+let next=randomShape();
+function spawn(){({shape:currentSet,rot}=next);next=randomShape();current=currentSet[rot];pos=3;
+ if(current.some(i=>cells[pos+i].classList.contains('frozen'))){alert('게임 오버!');stopGame();return;} draw();}
 
-  function moveDown(manual=false){undraw();if(current[rot].some(i=>{const ni=pos+i+cols;return ni>=rows*cols||cells[ni].classList.contains('frozen');})){
-      pos+=0;draw();freeze();clearLines();spawn();return;} pos+=cols;draw(); if(manual){score++;updateScore();}}
+function move(dx){if(!playing)return;undraw();if(current.some(i=>{const ni=pos+i+dx;return ni<0||ni>=rows*cols||Math.floor((pos+i)/cols)!==Math.floor(ni/cols)||cells[ni].classList.contains('frozen');})){draw();return;} pos+=dx;draw();}
+function rotate(){if(!playing)return;undraw();const nextRot=(rot+1)%currentSet.length;const test=currentSet[nextRot];if(test.some(i=>{const ni=pos+i;return ni<0||ni>=rows*cols||Math.floor(pos/cols)!==Math.floor(ni/cols)&&i%cols!==1||cells[ni].classList.contains('frozen');})){draw();return;} rot=nextRot;current=test;draw();}
+function moveDown(manual=false){if(!playing)return;undraw();if(current.some(i=>{const ni=pos+i+cols;return ni>=rows*cols||cells[ni].classList.contains('frozen');})){draw();freeze();clearLines();spawn();return;} pos+=cols;draw();if(manual){score++;updateScore();}}
 
-  function clearLines(){for(let r=0;r<rows;r++){const line=[...Array(cols).keys()].map(c=>cells[r*cols+c]);if(line.every(c=>c.classList.contains('frozen'))){score+=10;updateScore();line.forEach(c=>c.classList.remove('frozen'));const removed=cells.splice(r*cols,cols);cells.unshift(...removed);cells.forEach((c,i)=>c.dataset.index=i);game.innerHTML='';cells.forEach(c=>game.appendChild(c));}}
-  }
+function clearLines(){for(let r=rows-1;r>=0;r--){const line=[...Array(cols).keys()].map(c=>cells[r*cols+c]);if(line.every(c=>c.classList.contains('frozen'))){score+=5;updateScore();line.forEach(c=>c.classList.remove('frozen'));
+ const removed=cells.splice(r*cols,cols);cells.unshift(...removed);
+ cells.forEach((c,i)=>c.classList.remove('active'));
+ r++;}}
+}
+function updateScore(){scoreEl.textContent='점수: '+score;}
+function startGame(){if(playing)return;startBtn.style.display='none';info.style.display='flex';controls.style.display='grid';buildGrid();score=0;updateScore();playing=true;next=randomShape();spawn();dropTimer=setInterval(()=>moveDown(false),interval);} 
+function stopGame(){playing=false;clearInterval(dropTimer);startBtn.style.display='block';controls.style.display='none';}
 
-  function updateScore(){scoreEl.textContent='점수: '+score;}
-
-  document.addEventListener('keydown',e=>{
-    if(e.key==='ArrowLeft')move('left');
-    else if(e.key==='ArrowRight')move('right');
-    else if(e.key==='ArrowUp')rotate();
-    else if(e.key==='ArrowDown')moveDown(true);
-  });
-
-  // 모바일 터치 컨트롤
-  const qs=id=>document.getElementById(id);
-  [['left','left'],['right','right'],['rotate','rot'],['down','down']].forEach(([id,act])=>{
-    const el=qs(id);
-    el&&el.addEventListener('touchstart',e=>{e.preventDefault();if(act==='left'||act==='right')move(act);else if(act==='rot')rotate();else moveDown(true);});
-  });
-
-  spawn();
-  dropTimer=setInterval(()=>moveDown(false),interval);
-  </script>
+// Keyboard
+document.addEventListener('keydown',e=>{if(!playing)return; if(e.key==='ArrowLeft')move(-1); else if(e.key==='ArrowRight')move(1); else if(e.key==='ArrowUp')rotate(); else if(e.key==='ArrowDown')moveDown(true);});
+// Touch buttons
+const bind=(id,fn)=>{const el=document.getElementById(id);el&&el.addEventListener('touchstart',e=>{e.preventDefault();fn();});};
+bind('left',()=>move(-1));bind('right',()=>move(1));bind('rotate',rotate);bind('down',()=>moveDown(true));
+startBtn.addEventListener('click',startGame);
+</script>
 </body>
 </html>
