@@ -6,7 +6,7 @@
   <title>🎮 테트리스</title>
   <style>
     :root { --cell: 30px; --gap: 1px; --bg: #0e0e0e; --active: #4fc3f7; --frozen: #1565c0; }
-    body { margin:0;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;background:var(--bg);color:#fff; }
+    body {margin:0;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;background:var(--bg);color:#fff;}
     h1{margin:20px 0 10px}
     #info{display:flex;gap:20px;align-items:center}
     #score{font-size:1.2rem}
@@ -40,9 +40,8 @@ const info=document.getElementById('info');
 const scoreEl=document.getElementById('score');
 const controls=document.getElementById('controls');
 let cells=[],currentSet,current,pos,rot,score=0,interval=700,dropTimer,playing=false;
-
 function buildGrid(){game.innerHTML='';cells=[];game.style.gridTemplateColumns=`repeat(${cols}, var(--cell))`;game.style.gridTemplateRows=`repeat(${rows}, var(--cell))`;for(let i=0;i<rows*cols;i++){const d=document.createElement('div');d.className='cell';game.appendChild(d);cells.push(d);} }
-
+// shape rotations (SRS-ish)
 const T=[[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]];
 const O=[[0,1,cols,cols+1]];
 const I=[[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]];
@@ -51,34 +50,22 @@ const Z=[[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]];
 const L=[[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]];
 const J=[[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]];
 const SHAPES=[T,O,I,S,Z,L,J];
-function randomShape(){const t=SHAPES[Math.floor(Math.random()*SHAPES.length)];return {shape:t,rot:0};}
+function randomShape(){const s=SHAPES[Math.floor(Math.random()*SHAPES.length)];return{shape:s,rot:0};}
 let next=randomShape();
 function draw(){current.forEach(i=>cells[pos+i]?.classList.add('active'));}
 function undraw(){current.forEach(i=>cells[pos+i]?.classList.remove('active'));}
 function freeze(){current.forEach(i=>cells[pos+i]?.classList.replace('active','frozen'));}
-
-function spawn(){({shape:currentSet,rot}=next);next=randomShape();current=currentSet[rot];pos=3;
- if(current.some(i=>cells[pos+i].classList.contains('frozen'))){alert('게임 오버!');stopGame();return;} draw();}
-
-function wallKick(test,offsets){for(const off of offsets){if(test.every(i=>{const ni=pos+off+i;return ni>=0&&ni<rows*cols&&!cells[ni].classList.contains('frozen')&&(ni%cols)<cols;})){pos+=off;return true;}}return false;}
-function rotate(){if(!playing)return;undraw();const nextRot=(rot+1)%currentSet.length;const test=currentSet[nextRot];const kicks=[0,-1,1,-cols];if(wallKick(test,kicks)){rot=nextRot;current=currentSet[rot];} draw();}
-function move(dx){if(!playing)return;undraw();if(current.some(i=>{const ni=pos+i+dx;return ni<0||ni>=rows*cols||Math.floor((pos+i)/cols)!==Math.floor(ni/cols)||cells[ni].classList.contains('frozen');})){draw();return;} pos+=dx;draw();}
-function moveDown(manual=false){if(!playing)return;undraw();if(current.some(i=>{const ni=pos+i+cols;return ni>=rows*cols||cells[ni].classList.contains('frozen');})){draw();freeze();clearLines();spawn();return;} pos+=cols;draw();if(manual){score++;updateScore();}}
-
-function clearLines(){for(let r=rows-1;r>=0;r--){const isFull=[...Array(cols).keys()].every(c=>cells[r*cols+c].classList.contains('frozen'));if(isFull){score+=10;updateScore(); for(let c=0;c<cols;c++){cells[r*cols+c].classList.remove('frozen');} // remove row
- const row=cells.splice(r*cols,cols); // delete from array
- row.forEach(cell=>{cell.className='cell';});
- cells.unshift(...row); // add as empty row on top
- cells.forEach(c=>c.classList.remove('active')); // ensure no stray active
- game.innerHTML=''; cells.forEach(c=>game.appendChild(c)); r++;}}
-}
+function spawn(){({shape:currentSet,rot}=next);next=randomShape();current=currentSet[rot];pos=3;if(current.some(i=>cells[pos+i].classList.contains('frozen'))){alert('게임 오버!');stopGame();return;}draw();}
+function valid(test,offset){return test.every(i=>{const ni=pos+offset+i;return ni>=0&&ni<rows*cols&&(ni%cols)>=0&&(ni%cols)<cols&&!cells[ni].classList.contains('frozen');});}
+function rotate(){if(!playing)return;undraw();const nextRot=(rot+1)%currentSet.length;const test=currentSet[nextRot];const kicks=[0,-1,1,-2,2,-cols];let moved=false;for(const off of kicks){if(valid(test,off)){pos+=off;rot=nextRot;current=test;moved=true;break;}}draw();}
+function move(dx){if(!playing)return;undraw();if(valid(current,dx)){pos+=dx;}draw();}
+function moveDown(manual=false){if(!playing)return;undraw();if(!valid(current,cols)){draw();freeze();clearLines();spawn();return;}pos+=cols;draw();if(manual){score++;updateScore();}}
+function clearLines(){for(let r=rows-1;r>=0;r--){if([...Array(cols).keys()].every(c=>cells[r*cols+c].classList.contains('frozen'))){score+=10;updateScore();for(let c=0;c<cols;c++){cells[r*cols+c].classList.remove('frozen');}const removed=cells.splice(r*cols,cols);removed.forEach(cell=>cell.className='cell');cells.unshift(...removed);game.innerHTML='';cells.forEach(c=>game.appendChild(c));r++;}}}
 function updateScore(){scoreEl.textContent='점수: '+score;}
-function startGame(){if(playing)return;startBtn.style.display='none';info.style.display='flex';controls.style.display='grid';buildGrid();score=0;updateScore();playing=true;next=randomShape();spawn();dropTimer=setInterval(()=>moveDown(false),interval);} 
-function stopGame(){playing=false;clearInterval(dropTimer);startBtn.style.display='block';controls.style.display='none';}
-
-// Keyboard
-document.addEventListener('keydown',e=>{if(!playing)return; if(e.key==='ArrowLeft')move(-1); else if(e.key==='ArrowRight')move(1); else if(e.key==='ArrowUp')rotate(); else if(e.key==='ArrowDown')moveDown(true);});
-// Touch
+function startGame(){if(playing)return;startBtn.style.display='none';info.style.display='flex';controls.style.display='grid';buildGrid();score=0;updateScore();playing=true;next=randomShape();spawn();dropTimer=setInterval(()=>moveDown(false),interval);}function stopGame(){playing=false;clearInterval(dropTimer);startBtn.style.display='block';controls.style.display='none';}
+// keyboard
+document.addEventListener('keydown',e=>{if(!playing)return;switch(e.key){case'ArrowLeft':move(-1);break;case'ArrowRight':move(1);break;case'ArrowUp':rotate();break;case'ArrowDown':moveDown(true);break;}});
+// touch buttons
 [['left',()=>move(-1)],['right',()=>move(1)],['rotate',rotate],['down',()=>moveDown(true)]].forEach(([id,fn])=>{document.getElementById(id)?.addEventListener('touchstart',e=>{e.preventDefault();fn();});});
 startBtn.addEventListener('click',startGame);
 </script>
