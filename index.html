@@ -98,15 +98,17 @@
     <div class="btn" style="grid-column:2/3" id="drop">🧨</div>
     <div class="btn" id="holdBtn">⏸️</div>
   </div>
-  <script>
+
+<script>
 /* === 전역 & 헬퍼 === */
 const rows = 20, cols = 10, board = $('#board');
-let grid = [], queue = [], current = null, holdPiece = null;
-let canHold = true, playing = false;
+let grid = [], queue = [], current = null;
+let holdPiece = null, canHold = true;
+let playing = false;
 let score = 0, level = 1, lines = 0;
 
 const baseInterval = 700, lockDelay = 500;
-let timer, lockTimer = 0;
+let timer = null, lockTimer = 0;
 
 function $(id){ return document.getElementById(id); }
 
@@ -150,19 +152,35 @@ function drawMini(el,piece){
 }
 
 /* === HUD === */
-function hud(){ $('#score').textContent=score; $('#level').textContent=level; $('#lines').textContent=lines; }
+function hud(){ 
+  $('#score').textContent=score; 
+  $('#level').textContent=level; 
+  $('#lines').textContent=lines; 
+}
 
 /* === 큐 관리 === */
 function rnd(){ return Object.keys(SHAPES)[Math.floor(Math.random()*7)]; }
-function refill(){ while(queue.length<5) queue.push(rnd()); drawMini($('#next'),queue[0]); }
-    /* === 충돌 & 낙하거리 === */
+function refill(){ 
+  while(queue.length<5) queue.push(rnd()); 
+  drawMini($('#next'),queue[0]); 
+}
+
+/* === 충돌 검사 === */
 function hit(shape,off=0){
   return shape.some(i=>{
-    const ni=current.pos+off+i, x=ni%cols, y=Math.floor(ni/cols);
+    const ni=current.pos+off+i;
+    if(ni < 0) return true;  // 음수 인덱스 처리
+    const x=ni%cols, y=Math.floor(ni/cols);
     return x<0||x>=cols||y>=rows||grid[ni].classList.contains('frozen');
   });
 }
-function dropDist(){ let d=0; while(!hit(current.shape(),(d+1)*cols)) d++; return d; }
+
+/* 낙하 거리 계산 */
+function dropDist(){ 
+  let d=0; 
+  while(!hit(current.shape(),(d+1)*cols)) d++; 
+  return d; 
+}
 
 /* === 그리기 === */
 function clearGhost(){ grid.forEach(c=>c.classList.remove('ghost')); }
@@ -182,7 +200,6 @@ function placeGhost(){
   const d=dropDist();
   current.shape().forEach(i=>grid[current.pos+i+d*cols]?.classList.add('ghost'));
 }
-
 /* === 블록 === */
 function newPiece(){
   current={name:queue.shift(),pos:3,rot:0};
@@ -190,10 +207,14 @@ function newPiece(){
   if(hit(current.shape())) return gameOver();
   drawCurr();
 }
+
 function lockPiece(){
   eraseCurr();
   current.shape().forEach(i=>grid[current.pos+i].classList.add('frozen',COLORS[current.name]));
-  clearGhost(); delLines(); newPiece(); setGravity();
+  clearGhost(); 
+  delLines(); 
+  newPiece(); 
+  setGravity();
 }
 
 /* === 라인 삭제 & 점수 === */
@@ -203,8 +224,17 @@ function delLines(){
     if([...Array(cols)].every(c=>grid[r*cols+c].classList.contains('frozen'))){
       cleared++;
       for(let c=0;c<cols;c++) grid[r*cols+c].className='cell';
-      const row=grid.splice(r*cols,cols); grid.unshift(...row);
-      board.innerHTML=''; grid.forEach(c=>board.appendChild(c)); r++;
+      // 줄 삭제 후 블록 내려오기: grid 배열에서 실제 요소 순서 조작 대신 클래스만 옮기도록 재구성
+      for(let rr=r; rr>0; rr--){
+        for(let cc=0; cc<cols; cc++){
+          const aboveCell = grid[(rr-1)*cols+cc];
+          const currCell = grid[rr*cols+cc];
+          currCell.className = aboveCell.className;
+        }
+      }
+      // 최상단 행은 빈 칸으로 초기화
+      for(let c=0;c<cols;c++) grid[c].className='cell';
+      r++; // 다시 같은 줄 검사
     }
   }
   if(cleared){
@@ -225,6 +255,7 @@ function move(dx,dy=0){
   }
   drawCurr();
 }
+
 function rotate(){
   eraseCurr();
   const nxt=(current.rot+1)%SHAPES[current.name].length;
@@ -235,7 +266,9 @@ function rotate(){
   }
   drawCurr();
 }
+
 function soft(){ move(0,1); }
+
 function hard(){
   eraseCurr();
   const d=dropDist(); current.pos += d*cols; score += d*2;
@@ -243,12 +276,13 @@ function hard(){
 }
 
 /* === 홀드 === */
-let holdPiece=null, canHold=true;
 function hold(){
   if(!canHold) return;
   eraseCurr(); clearGhost();
-  if(!holdPiece){ holdPiece=current.name; newPiece(); }
-  else{
+  if(!holdPiece){ 
+    holdPiece=current.name; 
+    newPiece(); 
+  } else {
     [holdPiece,current.name]=[current.name,holdPiece];
     current.pos=3; current.rot=0;
     if(hit(current.shape())) return gameOver();
@@ -265,112 +299,50 @@ function setGravity(){
     else if(Date.now()-lockTimer>lockDelay) lockPiece();
   }, Math.max(100, baseInterval-(level-1)*50));
 }
-
-/* === 게임 컨트롤 === */
+  /* === 게임 컨트롤 === */
 function startGame(){
   if(playing) return;
   playing=true; $('#start').style.display='none';
   $('#wrapper').style.display='flex'; $('#controls').style.display='grid';
   score=level=lines=0; hud(); buildGrid(); queue=[]; refill();
-  holdPiece=null; drawMini($('#hold'),null);
+  holdPiece=null; canHold=true; drawMini($('#hold'),null);
   newPiece(); setGravity();
 }
+
 function gameOver(){
   clearInterval(timer);
   alert(`게임 오버! 총 점수: ${score}`);
   playing=false;
-  $('#wrapper').style.display='none'; $('#controls').style.display='none';
+  $('#wrapper').style.display='none'; 
+  $('#controls').style.display='none';
   $('#start').style.display='block';
 }
 
 /* === 입력 === */
 $('#start').onclick=startGame;
+
 document.addEventListener('keydown',e=>{
   if(!playing) return;
   switch(e.key){
-    case'ArrowLeft': move(-1); break;
-    case'ArrowRight':move(1);  break;
-    case'ArrowDown': soft();   break;
-    case'ArrowUp':   rotate(); break;
+    case'ArrowLeft': e.preventDefault(); move(-1); break;
+    case'ArrowRight': e.preventDefault(); move(1);  break;
+    case'ArrowDown': e.preventDefault(); soft();   break;
+    case'ArrowUp': e.preventDefault(); rotate(); break;
     case' ': e.preventDefault(); hard(); break;
-    case'c':case'C':case'Shift': hold(); break;
+    case'c':case'C':case'Shift': e.preventDefault(); hold(); break;
   }
 });
+
 [['left',()=>move(-1)],['right',()=>move(1)],['down',soft],
  ['rotate',rotate],['drop',hard],['holdBtn',hold]]
- .forEach(([id,fn])=>{ $('#'+id)?.addEventListener('touchstart',e=>{e.preventDefault();fn();}); });
+ .forEach(([id,fn])=>{
+   const el = $('#'+id);
+   if(!el) return;
+   el.addEventListener('touchstart',e=>{
+     e.preventDefault();
+     fn();
+   }, { passive:false });
+ });
 </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>테트리스</title>
-  <style>
-    body {
-      margin: 0;
-      background: #111;
-      color: white;
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #start {
-      margin: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #board {
-      display: grid;
-      grid-template-columns: repeat(10, 30px);
-      grid-template-rows: repeat(20, 30px);
-      gap: 1px;
-      background: #333;
-    }
-    .cell {
-      width: 30px;
-      height: 30px;
-      background: #111;
-    }
-    .active {
-      background: white;
-    }
-  </style>
-</head>
-<body>
-  <button id="start">게임 시작</button>
-  <div id="board"></div>
-
-  <script>
-    const board = document.getElementById("board");
-    let cells = [];
-
-    function buildBoard() {
-      board.innerHTML = "";
-      cells = [];
-      for (let i = 0; i < 200; i++) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        board.appendChild(cell);
-        cells.push(cell);
-      }
-    }
-
-    function startGame() {
-      alert("게임 시작!");
-      buildBoard();
-      // 여기서부터 테트리스 초기화 가능
-    }
-
-    document.getElementById("start").addEventListener("click", startGame);
-  </script>
 </body>
 </html>
