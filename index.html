@@ -302,3 +302,75 @@ document.addEventListener('keydown',e=>{
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>테트리스</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #start {
+      margin: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(10, 30px);
+      grid-template-rows: repeat(20, 30px);
+      gap: 1px;
+      background: #333;
+    }
+    .cell {
+      width: 30px;
+      height: 30px;
+      background: #111;
+    }
+    .active {
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <button id="start">게임 시작</button>
+  <div id="board"></div>
+
+  <script>
+    const board = document.getElementById("board");
+    let cells = [];
+
+    function buildBoard() {
+      board.innerHTML = "";
+      cells = [];
+      for (let i = 0; i < 200; i++) {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        board.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function startGame() {
+      alert("게임 시작!");
+      buildBoard();
+      // 여기서부터 테트리스 초기화 가능
+    }
+
+    document.getElementById("start").addEventListener("click", startGame);
+  </script>
+</body>
+</html>
