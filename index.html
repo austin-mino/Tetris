@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>🎮 테트리스</title>
   <style>
     :root {
@@ -28,7 +28,17 @@
     .btn{background:#333;border:2px solid #555;border-radius:8px;color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center}
     .btn:active{background:#555}
     #startBtn{margin-top:10px;padding:8px 14px;font-size:1rem;border:none;border-radius:6px;background:#4caf50;color:#fff;cursor:pointer}
-    @media(hover:hover){#controls{display:none}}
+    @media (hover:hover){#controls{display:none}}
+
+    @media screen and (max-width: 480px) {
+      :root { --cell: 24px; }
+      #controls {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(2, 50px);
+      }
+      .btn { font-size: 1.2rem; }
+      #startBtn { font-size: 0.95rem; padding: 6px 12px; }
+    }
   </style>
 </head>
 <body>
@@ -50,16 +60,15 @@ const scoreEl=document.getElementById('score');
 const controls=document.getElementById('controls');
 let cells=[],current=[],pos=0,rot=0,score=0,interval=800,dropTimer=null,playing=false;
 
-function buildGrid(){game.innerHTML='';cells=[];game.style.gridTemplateColumns=`repeat(${cols}, 30px)`;game.style.gridTemplateRows=`repeat(${rows}, 30px)`;for(let i=0;i<rows*cols;i++){const d=document.createElement('div');d.className='cell';game.appendChild(d);cells.push(d);} }
+function buildGrid(){game.innerHTML='';cells=[];game.style.gridTemplateColumns=`repeat(${cols}, var(--cell))`;game.style.gridTemplateRows=`repeat(${rows}, var(--cell))`;for(let i=0;i<rows*cols;i++){const d=document.createElement('div');d.className='cell';game.appendChild(d);cells.push(d);} }
 
-// Tetromino rotation templates (relative indexes for 10‑wide grid base)
 const T=[[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]];
 const O=[[0,1,cols,cols+1]];
 const I=[[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]];
 const S=[[1,2,cols,cols+1],[0,cols,cols+1,cols*2],[1,2,cols,cols+1],[0,cols,cols+1,cols*2]];
 const Z=[[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1],[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]];
 const L=[[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]];
-const J=[[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,2*cols+2-cols],[0,cols,cols+1,cols+2]]; // simple placeholder J rotations
+const J=[[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,2*cols+2-cols],[0,cols,cols+1,cols+2]];
 const SHAPES=[T,O,I,S,Z,L,J];
 
 function draw(){current.forEach(i=>cells[pos+i].classList.add('active'));}
