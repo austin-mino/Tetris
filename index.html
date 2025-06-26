@@ -2,137 +2,81 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
   <title>🎮 Classic Tetris</title>
   <style>
-    :root {
-      --bg: #121725;
-      --cell: 28px;
-      --gap: 1px;
-      --grid: #1e2233;
-      --T: #b36be0;
-      --O: #f7d041;
-      --I: #30c3ec;
-      --S: #5ccd6a;
-      --Z: #ef5959;
-      --L: #f69c3c;
-      --J: #5185f7;
+    :root{
+      --bg:#121725; --cell:28px; --gap:1px; --grid:#1e2233;
+      --T:#b36be0; --O:#f7d041; --I:#30c3ec; --S:#5ccd6a;
+      --Z:#ef5959; --L:#f69c3c; --J:#5185f7;
     }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      -webkit-tap-highlight-color: transparent;
-      touch-action: manipulation;
+    body{
+      margin:0; font-family:'Segoe UI',sans-serif;
+      background:var(--bg); color:#fff;
+      display:flex; flex-direction:column; align-items:center;
+      -webkit-tap-highlight-color:transparent; touch-action:manipulation;
     }
-    h1 { margin: 14px 0 4px; font-size: 1.8rem; }
-    #wrapper { display: flex; gap: 18px; margin-top: 6px; }
-    #board {
-      display: grid;
-      gap: var(--gap);
-      background: var(--grid);
-      touch-action: none;
+    h1{margin:14px 0 4px;font-size:1.8rem}
+    #wrapper{display:flex;gap:18px;margin-top:6px}
+    #board{display:grid;gap:var(--gap);background:var(--grid);touch-action:none}
+    .cell{width:var(--cell);height:var(--cell);background:#151a28}
+    /* 고정 블록 색상 */
+    .T{background:var(--T)} .O{background:var(--O)} .I{background:var(--I)}
+    .S{background:var(--S)} .Z{background:var(--Z)}
+    .L{background:var(--L)} .J{background:var(--J)}
+    /* 현재 블록 */
+    .active{outline:1px solid #fff}
+    /* 고스트 블록은 흐릿한 흰색만 */
+    .ghost{background:rgba(255,255,255,.18)}
+    /* -------- 사이드패널 -------- */
+    #side{display:flex;flex-direction:column;gap:10px}
+    .panel{background:#1b2031;border-radius:8px;padding:8px 10px;min-width:100px}
+    .panel h3{margin:0 0 4px;font-size:.9rem}
+    .mini{
+      display:grid;grid-template-columns:repeat(4,18px);
+      grid-template-rows:repeat(4,18px);gap:1px;background:var(--grid)
     }
-    .cell {
-      width: var(--cell);
-      height: var(--cell);
-      background: #151a28;
+    .mini div{width:18px;height:18px;background:#151a28}
+    /* -------- 터치 컨트롤 -------- */
+    #controls{
+      display:grid;grid-template-columns:repeat(3,60px);
+      grid-template-rows:repeat(2,60px);gap:8px;
+      margin:14px 0;user-select:none
     }
-    .ghost { opacity: .25; }
-    .T { background: var(--T); }
-    .O { background: var(--O); }
-    .I { background: var(--I); }
-    .S { background: var(--S); }
-    .Z { background: var(--Z); }
-    .L { background: var(--L); }
-    .J { background: var(--J); }
-
-    #side {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    .btn{
+      background:#333;border:2px solid #555;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.4rem;color:#fff
     }
-    .panel {
-      background: #1b2031;
-      border-radius: 8px;
-      padding: 8px 10px;
-      min-width: 100px;
+    .btn:active{background:#555}
+    /* 시작 버튼 */
+    #start{
+      padding:8px 18px;border:none;border-radius:6px;
+      background:#4caf50;color:#fff;cursor:pointer;font-size:1rem;margin-top:8px
     }
-    .panel h3 {
-      margin: 0 0 4px;
-      font-size: 0.9rem;
-    }
-    .mini {
-      display: grid;
-      grid-template-columns: repeat(4, 18px);
-      grid-template-rows: repeat(4, 18px);
-      gap: 1px;
-      background: var(--grid);
-    }
-    .mini div {
-      width: 18px;
-      height: 18px;
-      background: #151a28;
-    }
-    #controls {
-      display: grid;
-      grid-template-columns: repeat(3, 60px);
-      grid-template-rows: repeat(2, 60px);
-      gap: 8px;
-      margin: 14px 0;
-      user-select: none;
-    }
-    .btn {
-      background: #333;
-      border: 2px solid #555;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      color: #fff;
-    }
-    .btn:active { background: #555; }
-    #start {
-      padding: 8px 18px;
-      border: none;
-      border-radius: 6px;
-      background: #4caf50;
-      color: #fff;
-      cursor: pointer;
-      font-size: 1rem;
-      margin-top: 8px;
-    }
-    @media (max-width: 480px) {
-      :root { --cell: 22px; }
-      .mini {
-        grid-template-columns: repeat(4, 14px);
-        grid-template-rows: repeat(4, 14px);
-      }
-      #controls {
-        grid-template-columns: repeat(3, 50px);
-        grid-template-rows: repeat(2, 50px);
-      }
+    @media(max-width:480px){
+      :root{--cell:22px}
+      .mini{grid-template-columns:repeat(4,14px);grid-template-rows:repeat(4,14px)}
+      #controls{grid-template-columns:repeat(3,50px);grid-template-rows:repeat(2,50px)}
     }
   </style>
 </head>
 <body>
   <h1>🎮 Classic Tetris</h1>
   <button id="start">게임 시작</button>
+
   <div id="wrapper" style="display:none">
     <div id="board"></div>
     <div id="side">
-      <div class="panel"><h3>다음</h3><div id="next" class="mini"></div></div>
-      <div class="panel"><h3>보류</h3><div id="hold" class="mini"></div></div>
+      <div class="panel"><h3>다음</h3><div id="next"  class="mini"></div></div>
+      <div class="panel"><h3>보류</h3><div id="hold"  class="mini"></div></div>
       <div class="panel"><h3>점수</h3><div id="score">0</div></div>
       <div class="panel"><h3>레벨</h3><div id="level">1</div></div>
       <div class="panel"><h3>줄</h3><div id="lines">0</div></div>
     </div>
   </div>
+
   <div id="controls" style="display:none">
     <div class="btn" id="left">⬅️</div>
     <div class="btn" id="rotate">🔄</div>
@@ -142,265 +86,177 @@
     <div class="btn" id="holdBtn">⏸️</div>
   </div>
   <script>
-  const rows = 20, cols = 10;
-  const board = document.getElementById('board');
-  const scoreEl = document.getElementById('score');
-  const levelEl = document.getElementById('level');
-  const linesEl = document.getElementById('lines');
-  const nextMini = document.getElementById('next');
-  const holdMini = document.getElementById('hold');
+/* === 전역 & 헬퍼 === */
+const rows=20,cols=10,board=$('board');
+let grid=[],queue=[],current=null,holdPiece=null,canHold=true,playing=false;
+let score=0,level=1,lines=0;
+const baseInterval=700,lockDelay=500;
+let timer,lockTimer=0;
+function $(id){return document.getElementById(id);}
 
-  const SHAPES = {
-    T: [[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]],
-    O: [[0,1,cols,cols+1]],
-    I: [[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]],
-    S: [[1,2,cols,cols+1],[0,cols,cols+1,cols*2]],
-    Z: [[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]],
-    L: [[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]],
-    J: [[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]],
-  };
-  const COLORS = { T: 'T', O: 'O', I: 'I', S: 'S', Z: 'Z', L: 'L', J: 'J' };
+/* === 도형 데이터 === */
+const SHAPES={
+ T:[[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]],
+ O:[[0,1,cols,cols+1]],
+ I:[[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]],
+ S:[[1,2,cols,cols+1],[0,cols,cols+1,cols*2]],
+ Z:[[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]],
+ L:[[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]],
+ J:[[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]]
+};
+const COLORS={T:'T',O:'O',I:'I',S:'S',Z:'Z',L:'L',J:'J'};
 
-  let grid = [], queue = [], current = null, holdPiece = null;
-  let canHold = true, playing = false;
-  let score = 0, level = 1, lines = 0;
-  const baseInterval = 700;
-  let timer, lockTimer = 0;
-  const lockDelay = 500;
+/* === 프로토타입: 현재 회전 shape 반환 === */
+Object.defineProperty(Object.prototype,'shape',{value(){return SHAPES[this.name][this.rot]},enumerable:false});
 
-  function buildGrid() {
-    board.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
-    board.style.gridTemplateRows = `repeat(${rows}, var(--cell))`;
-    board.innerHTML = ''; grid = [];
-    for (let i = 0; i < rows * cols; i++) {
-      const d = document.createElement('div');
-      d.className = 'cell';
-      board.appendChild(d); grid.push(d);
-    }
-  }
+/* === 보드 생성 === */
+function buildGrid(){
+  board.style.gridTemplateColumns=`repeat(${cols},var(--cell))`;
+  board.style.gridTemplateRows=`repeat(${rows},var(--cell))`;
+  board.innerHTML=''; grid=[];
+  for(let i=0;i<rows*cols;i++){const d=document.createElement('div');d.className='cell';board.appendChild(d);grid.push(d);}
+}
 
-  function randomPiece() {
-    const keys = Object.keys(SHAPES);
-    return keys[Math.floor(Math.random() * keys.length)];
-  }
+/* === 큐 & 미니 보드 === */
+function randPiece(){return Object.keys(SHAPES)[Math.floor(Math.random()*7)];}
+function refillQueue(){while(queue.length<5)queue.push(randPiece());drawMini($('next'),queue[0]);}
+function drawMini(el,piece){
+  el.innerHTML=''; const cells=[];
+  for(let i=0;i<16;i++){const d=document.createElement('div');d.className='cell';el.appendChild(d);cells.push(d);}
+  if(!piece)return;
+  SHAPES[piece][0].forEach(i=>{const x=i%cols,y=Math.floor(i/cols);cells[y*4+x].classList.add(COLORS[piece]);});
+}
 
-  function refillQueue() {
-    while (queue.length < 5) queue.push(randomPiece());
-    drawMini(nextMini, queue[0]);
-  }
+/* === HUD === */
+function updateHUD(){$('score').textContent=score;$('level').textContent=level;$('lines').textContent=lines;}
 
-  function newPiece() {
-    current = { name: queue.shift(), pos: 3, rot: 0 };
-    refillQueue();
-    canHold = true;
-    if (collision(current.shape())) gameOver();
-    drawCurrent();
-  }
-
-  Object.defineProperty(Object.prototype, 'shape', {
-    value() { return SHAPES[this.name][this.rot]; },
-    enumerable: false
+/* === 충돌, 낙하 거리 === */
+function collision(shape,off=0){
+  return shape.some(i=>{
+    const ni=current.pos+off+i,x=ni%cols,y=Math.floor(ni/cols);
+    return x<0||x>=cols||y>=rows||grid[ni].classList.contains('frozen');
   });
+}
+function dropDist(){let d=0;while(!collision(current.shape(),(d+1)*cols))d++;return d;}
 
-  function drawCells(indices, className) {
-    indices.forEach(i => grid[i]?.classList.add(className, COLORS[current.name]));
-  }
+/* === 그리기 === */
+function drawCells(idxs,cls,color){idxs.forEach(i=>grid[i]?.classList.add(cls,color));}
+function eraseCells(idxs,color){idxs.forEach(i=>grid[i]?.classList.remove('active',color));}
+function clearGhost(){grid.forEach(c=>c.classList.remove('ghost'));}
 
-  function eraseCells(indices) {
-    indices.forEach(i => grid[i]?.classList.remove('active', 'ghost', COLORS[current.name]));
-  }
+function drawCurrent(){
+  const idxs=current.shape().map(i=>current.pos+i);
+  drawCells(idxs,'active',COLORS[current.name]); placeGhost();
+}
+function eraseCurrent(){
+  const idxs=current.shape().map(i=>current.pos+i);
+  eraseCells(idxs,COLORS[current.name]); clearGhost();
+}
+function placeGhost(){
+  clearGhost();
+  const d=dropDist();
+  current.shape().forEach(i=>grid[current.pos+i+d*cols]?.classList.add('ghost'));
+}
 
-  function drawCurrent() {
-    drawCells(current.shape().map(i => current.pos + i), 'active');
-    placeGhost();
-  }
+/* === 블록 관리 === */
+function newPiece(){
+  current={name:queue.shift(),pos:3,rot:0}; refillQueue(); canHold=true;
+  if(collision(current.shape()))return gameOver();
+  drawCurrent();
+}
+function lockPiece(){
+  eraseCurrent();
+  current.shape().forEach(i=>grid[current.pos+i].classList.add('frozen',COLORS[current.name]));
+  clearGhost(); clearLines(); newPiece(); setGravity();
+}
 
-  function eraseCurrent() {
-    eraseCells(current.shape().map(i => current.pos + i));
-  }
-
-  function placeGhost() {
-    clearGhost();
-    const drop = dropDistance();
-    drawCells(current.shape().map(i => current.pos + i + drop * cols), 'ghost');
-  }
-
-  function clearGhost() {
-    grid.forEach(c => c.classList.remove('ghost'));
-  }
-
-  function collision(shape, offset = 0) {
-    return shape.some(i => {
-      const ni = current.pos + offset + i;
-      const x = ni % cols, y = Math.floor(ni / cols);
-      return x < 0 || x >= cols || y >= rows || grid[ni].classList.contains('frozen');
-    });
-  }
-
-  function dropDistance() {
-    let d = 0;
-    while (!collision(current.shape(), (d + 1) * cols)) d++;
-    return d;
-  }
-
-  function move(dx, dy = 0) {
-    eraseCurrent(); clearGhost();
-    if (!collision(current.shape(), dx + dy * cols)) {
-      current.pos += dx + dy * cols;
-      if (dy) { score++; updateHUD(); }
-      lockTimer = 0;
+/* === 라인 삭제 === */
+function clearLines(){
+  let cleared=0;
+  for(let r=rows-1;r>=0;r--){
+    if([...Array(cols)].every(c=>grid[r*cols+c].classList.contains('frozen'))){
+      cleared++;
+      for(let c=0;c<cols;c++)grid[r*cols+c].className='cell';
+      const row=grid.splice(r*cols,cols); grid.unshift(...row);
+      board.innerHTML=''; grid.forEach(c=>board.appendChild(c)); r++;
     }
-    drawCurrent();
   }
-
-  function rotate() {
-    eraseCurrent(); clearGhost();
-    const nextRot = (current.rot + 1) % SHAPES[current.name].length;
-    const tests = [0, -1, 1, -2, 2];
-    for (const k of tests) {
-      if (!collision(SHAPES[current.name][nextRot], k)) {
-        current.rot = nextRot;
-        current.pos += k;
-        break;
-      }
-    }
-    drawCurrent();
-  }
-
-  function softDrop() { move(0, 1); }
-
-  function hardDrop() {
-    eraseCurrent(); clearGhost();
-    const d = dropDistance();
-    current.pos += d * cols;
-    score += d * 2;
-    drawCurrent();
-    lockPiece();
+  if(cleared){
+    const pts=[0,100,300,500,800][cleared]; score+=pts*level; lines+=cleared;
+    if(lines>=level*10){level++; setGravity();}
     updateHUD();
   }
+}
 
-  function lockPiece() {
-    eraseCurrent();
-    drawCells(current.shape().map(i => current.pos + i), 'frozen');
-    clearGhost();
-    clearLines();
-    newPiece();
-    resetGravity();
+/* === 이동, 회전 === */
+function move(dx,dy=0){
+  eraseCurrent();
+  if(!collision(current.shape(),dx+dy*cols)){current.pos+=dx+dy*cols; if(dy){score++; updateHUD();} lockTimer=0;}
+  drawCurrent();
+}
+function rotate(){
+  eraseCurrent();
+  const next=(current.rot+1)%SHAPES[current.name].length;
+  for(const k of [0,-1,1,-2,2]){ if(!collision(SHAPES[current.name][next],k)){current.rot=next;current.pos+=k;break;} }
+  drawCurrent();
+}
+
+/* === 하드드롭 / 소프트드롭 === */
+function softDrop(){move(0,1);}
+function hardDrop(){
+  eraseCurrent();
+  const d=dropDist(); current.pos+=d*cols; score+=d*2;
+  drawCurrent(); lockPiece(); updateHUD();
+}
+
+/* === 홀드 === */
+function hold(){
+  if(!canHold)return;
+  eraseCurrent(); clearGhost();
+  if(!holdPiece){holdPiece=current.name; newPiece();}
+  else{[holdPiece,current.name]=[current.name,holdPiece]; current.pos=3; current.rot=0;
+       if(collision(current.shape()))return gameOver(); drawCurrent();}
+  canHold=false; drawMini($('hold'),holdPiece);
+}
+
+/* === 중력 === */
+function setGravity(){
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(lockTimer && Date.now()-lockTimer>lockDelay){lockPiece();}
+    else softDrop();
+  }, Math.max(100, baseInterval-(level-1)*50));
+}
+
+/* === 게임 루프 === */
+function startGame(){
+  if(playing)return;
+  playing=true; $('start').style.display='none';
+  $('wrapper').style.display='flex'; $('controls').style.display='grid';
+  score=level=lines=0; updateHUD();
+  buildGrid(); queue=[]; refillQueue(); holdPiece=null; drawMini($('hold'),null);
+  newPiece(); setGravity();
+}
+function gameOver(){
+  clearInterval(timer); alert(`게임 오버! 총 점수: ${score}`);
+  playing=false; $('wrapper').style.display='none'; $('controls').style.display='none'; $('start').style.display='block';
+}
+
+/* === 이벤트 === */
+$('start').onclick=startGame;
+document.addEventListener('keydown',e=>{
+  if(!playing)return;
+  switch(e.key){
+    case'ArrowLeft':move(-1);break;
+    case'ArrowRight':move(1);break;
+    case'ArrowDown':softDrop();break;
+    case'ArrowUp':rotate();break;
+    case' ':e.preventDefault();hardDrop();break;
+    case'c':case'C':case'Shift':hold();break;
   }
-
-  function clearLines() {
-    let cleared = 0;
-    for (let r = rows - 1; r >= 0; r--) {
-      if ([...Array(cols).keys()].every(c => grid[r * cols + c].classList.contains('frozen'))) {
-        cleared++;
-        for (let c = 0; c < cols; c++) grid[r * cols + c].className = 'cell';
-        const removed = grid.splice(r * cols, cols);
-        grid.unshift(...removed);
-        board.innerHTML = ''; grid.forEach(c => board.appendChild(c));
-        r++;
-      }
-    }
-    if (cleared) {
-      const pts = [0, 100, 300, 500, 800][cleared];
-      score += pts * level;
-      lines += cleared;
-      if (lines >= level * 10) { level++; resetGravity(); }
-      updateHUD();
-    }
-  }
-
-  function hold() {
-    if (!canHold) return;
-    eraseCurrent(); clearGhost();
-    if (!holdPiece) {
-      holdPiece = current.name;
-      newPiece();
-    } else {
-      [holdPiece, current.name] = [current.name, holdPiece];
-      current.pos = 3; current.rot = 0;
-      if (collision(current.shape())) gameOver();
-      drawCurrent();
-    }
-    canHold = false;
-    drawMini(holdMini, holdPiece);
-  }
-
-  function drawMini(target, piece) {
-    target.innerHTML = '';
-    const cells = [];
-    for (let i = 0; i < 16; i++) {
-      const d = document.createElement('div');
-      d.className = 'cell';
-      target.appendChild(d);
-      cells.push(d);
-    }
-    if (!piece) return;
-    SHAPES[piece][0].forEach(i => {
-      const x = i % cols, y = Math.floor(i / cols);
-      const idx = y * 4 + x;
-      cells[idx].classList.add(COLORS[piece]);
-    });
-  }
-
-  function resetGravity() {
-    clearInterval(timer);
-    timer = setInterval(() => {
-      if (!lockTimer) softDrop();
-      else if (Date.now() - lockTimer > lockDelay) lockPiece();
-    }, Math.max(100, baseInterval - (level - 1) * 50));
-  }
-
-  function updateHUD() {
-    scoreEl.textContent = score;
-    levelEl.textContent = level;
-    linesEl.textContent = lines;
-  }
-
-  function startGame() {
-    if (playing) return;
-    playing = true;
-    document.getElementById('wrapper').style.display = 'flex';
-    document.getElementById('controls').style.display = 'grid';
-    document.getElementById('start').style.display = 'none';
-    score = 0; level = 1; lines = 0;
-    buildGrid(); queue = []; refillQueue();
-    holdPiece = null; drawMini(holdMini, null); updateHUD();
-    newPiece(); resetGravity();
-  }
-
-  function gameOver() {
-    clearInterval(timer);
-    alert(`게임 오버! 총 점수: ${score}`);
-    playing = false;
-    document.getElementById('wrapper').style.display = 'none';
-    document.getElementById('controls').style.display = 'none';
-    document.getElementById('start').style.display = 'block';
-  }
-
-  document.getElementById('start').addEventListener('click', startGame);
-  document.addEventListener('keydown', e => {
-    if (!playing) return;
-    switch (e.key) {
-      case 'ArrowLeft': move(-1); break;
-      case 'ArrowRight': move(1); break;
-      case 'ArrowDown': softDrop(); break;
-      case 'ArrowUp': rotate(); break;
-      case ' ': e.preventDefault(); hardDrop(); break;
-      case 'c': case 'C': case 'Shift': hold(); break;
-    }
-  });
-
-  [['left', () => move(-1)],
-   ['right', () => move(1)],
-   ['down', () => softDrop()],
-   ['rotate', rotate],
-   ['drop', hardDrop],
-   ['holdBtn', hold]].forEach(([id, fn]) => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('touchstart', ev => {
-      ev.preventDefault(); fn();
-    });
-  });
+});
+[['left',()=>move(-1)],['right',()=>move(1)],['down',softDrop],['rotate',rotate],['drop',hardDrop],['holdBtn',hold]]
+  .forEach(([id,fn])=>{$(id)?.addEventListener('touchstart',e=>{e.preventDefault();fn();});});
 </script>
 </body>
 </html>
