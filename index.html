@@ -3,328 +3,170 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>테트리스</title>
+<title>완전한 테트리스</title>
 <style>
   body {
     background: #121725;
+    margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
-    color: white;
     font-family: monospace;
+    color: #fff;
   }
   #game {
-    position: relative;
-    width: 200px; /* 10 * 20px */
-    height: 400px; /* 20 * 20px */
-    background: #1e2233;
-    border: 3px solid #333;
     display: grid;
-    grid-template-columns: repeat(10, 20px);
-    grid-template-rows: repeat(20, 20px);
-    gap: 1px;
+    grid-template-columns: repeat(10, 30px);
+    grid-template-rows: repeat(20, 30px);
+    gap: 2px;
+    background: #1e2233;
+    padding: 5px;
+    border: 4px solid #333;
   }
   .cell {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     background: #121725;
     border-radius: 3px;
   }
-  .filled {
-    background: #5a8dee;
-  }
-  .J {
-    background: #2c6cdf;
-  }
-  .Z {
-    background: #df2c2c;
-  }
-  .I {
-    background: #2cdfd4;
-  }
-  .O {
-    background: #dfce2c;
-  }
-  .L {
-    background: #df852c;
-  }
-  .S {
-    background: #2cdf6d;
-  }
-  .T {
-    background: #a32cdf;
-  }
+  .I { background: #2cdfd4; }
+  .J { background: #2c6cdf; }
+  .L { background: #df852c; }
+  .O { background: #dfce2c; }
+  .S { background: #2cdf6d; }
+  .Z { background: #df2c2c; }
+  .T { background: #a32cdf; }
 </style>
 </head>
 <body>
+  <div id="game"></div>
+  <script>
+    const COLS = 10, ROWS = 20;
+    const COLORS = {I:'I', J:'J', L:'L', O:'O', S:'S', Z:'Z', T:'T'};
 
-<div id="game"></div>
+    const BLOCKS = {
+      I: [[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]]],
+      J: [[[1,0,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]],
+      L: [[[0,0,1,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]],
+      O: [[[0,1,1,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]]],
+      S: [[[0,1,1,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]]],
+      Z: [[[1,1,0,0],[0,1,1,0],[0,0,0,0],[0,0,0,0]]],
+      T: [[[0,1,0,0],[1,1,1,0],[0,0,0,0],[0,0,0,0]]],
+    };
 
-<script>
-const ROWS = 20;
-const COLS = 10;
+    let board = Array.from({length: ROWS}, _ => Array(COLS).fill(0));
+    let gameDiv = document.getElementById('game');
 
-const gameDiv = document.getElementById('game');
-
-// 보드 초기화
-let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
-
-// 블록 종류와 모양 (4x4 배열)
-const BLOCKS = {
-  I: [
-    [
-      [0,0,0,0],
-      [1,1,1,1],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-  J: [
-    [
-      [1,0,0,0],
-      [1,1,1,0],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-  L: [
-    [
-      [0,0,1,0],
-      [1,1,1,0],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-  O: [
-    [
-      [0,1,1,0],
-      [0,1,1,0],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-  S: [
-    [
-      [0,1,1,0],
-      [1,1,0,0],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-  Z: [
-    [
-      [1,1,0,0],
-      [0,1,1,0],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-  T: [
-    [
-      [0,1,0,0],
-      [1,1,1,0],
-      [0,0,0,0],
-      [0,0,0,0],
-    ],
-  ],
-};
-
-// 블록 색상 매핑
-const COLORS = {
-  I: 'I',
-  J: 'J',
-  L: 'L',
-  O: 'O',
-  S: 'S',
-  Z: 'Z',
-  T: 'T',
-};
-
-// 랜덤 블록 생성
-function randomBlock() {
-  const keys = Object.keys(BLOCKS);
-  const key = keys[Math.floor(Math.random() * keys.length)];
-  return {
-    type: key,
-    shape: BLOCKS[key][0].map(row => row.slice()), // 복사
-    row: 0,
-    col: 3,
-  };
-}
-
-let currentBlock = randomBlock();
-
-// 90도 시계 방향 회전
-function rotateMatrix(matrix) {
-  const N = matrix.length;
-  let rotated = Array.from({length: N}, () => Array(N).fill(0));
-  for(let r=0; r<N; r++) {
-    for(let c=0; c<N; c++) {
-      rotated[c][N - 1 - r] = matrix[r][c];
+    function randomBlock() {
+      const keys = Object.keys(BLOCKS);
+      const type = keys[Math.floor(Math.random()*keys.length)];
+      const shape = BLOCKS[type][0].map(r=>r.slice());
+      return {type, shape, row: -1, col: 3};
     }
-  }
-  return rotated;
-}
 
-// 충돌 체크
-function isCollision(board, shape, posRow, posCol) {
-  for(let r=0; r<shape.length; r++) {
-    for(let c=0; c<shape[r].length; c++) {
-      if(shape[r][c]) {
-        let newRow = posRow + r;
-        let newCol = posCol + c;
-        if(
-          newCol < 0 || newCol >= COLS ||
-          newRow >= ROWS ||
-          (newRow >= 0 && board[newRow][newCol] !== 0)
-        ) {
-          return true;
+    let current = randomBlock();
+
+    function rotate(m) {
+      const N = m.length, r = Array.from({length:N}, _=>Array(N).fill(0));
+      for(let i=0;i<N;i++)for(let j=0;j<N;j++) r[j][N-1-i]=m[i][j];
+      return r;
+    }
+
+    function collides(s, r, c) {
+      for(let i=0;i<s.length;i++)for(let j=0;j<s[i].length;j++) {
+        if(s[i][j]) {
+          const x=c+j, y=r+i;
+          if(x<0||x>=COLS||y>=ROWS|| (y>=0 && board[y][x])) return true;
+        }
+      }
+      return false;
+    }
+
+    function wallKick(rot, r, c) {
+      for(const d of [0,-1,1,-2,2]) {
+        if(!collides(rot, r, c+d)) return c+d;
+      }
+      return null;
+    }
+
+    function rotateCurrent() {
+      const nr = rotate(current.shape);
+      if(!collides(nr, current.row, current.col)) current.shape = nr;
+      else {
+        const nc = wallKick(nr, current.row, current.col);
+        if(nc !== null) {
+          current.shape = nr;
+          current.col = nc;
         }
       }
     }
-  }
-  return false;
-}
 
-// 월 킥 시도 (벽 밀기)
-function tryWallKick(board, rotatedShape, currentRow, currentCol) {
-  const kicks = [0, -1, 1, -2, 2];
-  for(let kick of kicks) {
-    if(!isCollision(board, rotatedShape, currentRow, currentCol + kick)) {
-      return currentCol + kick;
+    function fix() {
+      current.shape.forEach((r,i) => r.forEach((v,j) => {
+        if(v && current.row+i>=0) board[current.row+i][current.col+j] = current.type;
+      }));
     }
-  }
-  return null;
-}
 
-// 블록 회전 처리
-function rotateCurrentBlock() {
-  const rotatedShape = rotateMatrix(currentBlock.shape);
-  if(!isCollision(board, rotatedShape, currentBlock.row, currentBlock.col)) {
-    currentBlock.shape = rotatedShape;
-  } else {
-    const kickedCol = tryWallKick(board, rotatedShape, currentBlock.row, currentBlock.col);
-    if(kickedCol !== null) {
-      currentBlock.shape = rotatedShape;
-      currentBlock.col = kickedCol;
-    }
-  }
-  draw();
-}
-
-// 보드와 현재 블록 화면에 그리기
-function draw() {
-  gameDiv.innerHTML = '';
-  for(let r=0; r<ROWS; r++) {
-    for(let c=0; c<COLS; c++) {
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      if(board[r][c] !== 0) {
-        cell.classList.add(COLORS[board[r][c]]);
-      }
-      gameDiv.appendChild(cell);
-    }
-  }
-  // 현재 블록 그리기
-  for(let r=0; r<currentBlock.shape.length; r++) {
-    for(let c=0; c<currentBlock.shape[r].length; c++) {
-      if(currentBlock.shape[r][c]) {
-        let dr = currentBlock.row + r;
-        let dc = currentBlock.col + c;
-        if(dr >= 0 && dr < ROWS && dc >= 0 && dc < COLS) {
-          // 현재 위치 셀 찾아서 색상 바꾸기
-          const index = dr * COLS + dc;
-          gameDiv.children[index].classList.add(COLORS[currentBlock.type]);
+    function clearLines() {
+      for(let y=ROWS-1; y>=0; y--) {
+        if(board[y].every(v=>v)) {
+          board.splice(y,1);
+          board.unshift(Array(COLS).fill(0));
+          y++;
         }
       }
     }
-  }
-}
 
-// 블록을 보드에 고정
-function fixBlock() {
-  for(let r=0; r<currentBlock.shape.length; r++) {
-    for(let c=0; c<currentBlock.shape[r].length; c++) {
-      if(currentBlock.shape[r][c]) {
-        let dr = currentBlock.row + r;
-        let dc = currentBlock.col + c;
-        if(dr >= 0 && dr < ROWS && dc >= 0 && dc < COLS) {
-          board[dr][dc] = currentBlock.type;
+    function moveDown() {
+      if(!collides(current.shape, current.row+1, current.col)) {
+        current.row++;
+      } else {
+        fix();
+        clearLines();
+        current = randomBlock();
+        if(collides(current.shape, current.row, current.col)) {
+          board = Array.from({length: ROWS}, _ => Array(COLS).fill(0));
+          alert('게임 오버!');
         }
       }
+      draw();
     }
-  }
-}
 
-// 한 줄 완성 검사 및 삭제
-function clearLines() {
-  for(let r=ROWS-1; r>=0; r--) {
-    if(board[r].every(cell => cell !== 0)) {
-      board.splice(r,1);
-      board.unshift(Array(COLS).fill(0));
-      r++; // 다시 체크
+    function move(dx) {
+      if(!collides(current.shape, current.row, current.col + dx)) current.col += dx;
+      draw();
     }
-  }
-}
 
-// 블록 아래로 한 칸 이동
-function moveDown() {
-  if(!isCollision(board, currentBlock.shape, currentBlock.row + 1, currentBlock.col)) {
-    currentBlock.row++;
-  } else {
-    // 고정 후 새 블록 생성
-    fixBlock();
-    clearLines();
-    currentBlock = randomBlock();
-    if(isCollision(board, currentBlock.shape, currentBlock.row, currentBlock.col)) {
-      alert('게임 오버');
-      board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
+    document.addEventListener('keydown', e => {
+      if(e.code==='ArrowLeft') move(-1);
+      else if(e.code==='ArrowRight') move(1);
+      else if(e.code==='ArrowUp') rotateCurrent();
+      else if(e.code==='ArrowDown') moveDown();
+    });
+
+    function draw() {
+      gameDiv.innerHTML = '';
+      for(let y=0;y<ROWS;y++) {
+        for(let x=0;x<COLS;x++){
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          if(board[y][x]) cell.classList.add(COLORS[board[y][x]]);
+          gameDiv.appendChild(cell);
+        }
+      }
+      current.shape.forEach((r,i)=>r.forEach((v,j)=>{
+        const y = current.row+i, x = current.col+j;
+        if(v && y>=0) gameDiv.children[y*COLS + x].classList.add(COLORS[current.type]);
+      }));
     }
-  }
-  draw();
-}
 
-// 좌우 이동
-function moveLeft() {
-  if(!isCollision(board, currentBlock.shape, currentBlock.row, currentBlock.col - 1)) {
-    currentBlock.col--;
-  }
-  draw();
-}
-function moveRight() {
-  if(!isCollision(board, currentBlock.shape, currentBlock.row, currentBlock.col + 1)) {
-    currentBlock.col++;
-  }
-  draw();
-}
+    function startGame() {
+      setInterval(moveDown, 500);
+      draw();
+    }
 
-// 키 입력 처리
-document.addEventListener('keydown', e => {
-  switch(e.code) {
-    case 'ArrowLeft':
-      moveLeft();
-      break;
-    case 'ArrowRight':
-      moveRight();
-      break;
-    case 'ArrowDown':
-      moveDown();
-      break;
-    case 'ArrowUp':
-      rotateCurrentBlock();
-      break;
-  }
-});
-
-// 자동 낙하 (1초마다)
-setInterval(() => {
-  moveDown();
-}, 1000);
-
-draw();
-</script>
-
+    window.onload = startGame;
+  </script>
 </body>
 </html>
