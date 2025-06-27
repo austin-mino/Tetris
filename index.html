@@ -8,50 +8,54 @@
   :root {
     --bg: #121725;
     --grid: #1e2233;
-    --cell-size: 28px;
-    --gap: 2px;
+    --cell: 28px;
+    --gap: 1px;
 
-    --T: #b36be0;
-    --O: #f7d041;
-    --I: #30c3ec;
-    --S: #5ccd6a;
-    --Z: #ef5959;
-    --L: #f69c3c;
-    --J: #5185f7;
+    --T: #b36be0; --O: #f7d041; --I: #30c3ec;
+    --S: #5ccd6a; --Z: #ef5959; --L: #f69c3c; --J: #5185f7;
   }
-  * {
-    box-sizing: border-box;
-  }
+
   body {
     margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', sans-serif;
     background: var(--bg);
-    color: white;
+    color: #fff;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
+
   h1 {
-    margin: 20px 0 10px;
-    font-weight: 700;
+    margin: 14px 0 4px;
+    font-size: 1.8rem;
   }
-  #game {
+
+  #wrapper {
+    display: flex;
+    gap: 18px;
+    margin-top: 6px;
+  }
+
+  #board {
     display: grid;
-    grid-template-columns: repeat(10, var(--cell-size));
-    grid-template-rows: repeat(20, var(--cell-size));
     gap: var(--gap);
     background: var(--grid);
+    grid-template-columns: repeat(10, var(--cell));
+    grid-template-rows: repeat(20, var(--cell));
+    border-radius: 8px;
     border: 3px solid #333;
-    border-radius: 6px;
-    user-select: none;
   }
+
   .cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
+    width: var(--cell);
+    height: var(--cell);
     background: #151a28;
-    border-radius: 4px;
+    border-radius: 3px;
   }
+
+  /* 블록 색상 */
   .T { background: var(--T); }
   .O { background: var(--O); }
   .I { background: var(--I); }
@@ -59,85 +63,147 @@
   .Z { background: var(--Z); }
   .L { background: var(--L); }
   .J { background: var(--J); }
+
+  .active {
+    outline: 1px solid #fff;
+  }
+
   .ghost {
     opacity: 0.3;
   }
-  #info {
-    margin-top: 15px;
+
+  #side {
     display: flex;
-    gap: 20px;
-    font-size: 16px;
-  }
-  #info > div {
-    min-width: 80px;
-    text-align: center;
-  }
-  button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    background: #4caf50;
-    color: white;
-    cursor: pointer;
-    user-select: none;
-  }
-  button:active {
-    background: #388e3c;
-  }
-  #controls {
-    margin-top: 15px;
-    display: flex;
+    flex-direction: column;
     gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
   }
-  .btn {
-    width: 50px;
-    height: 50px;
-    background: #333;
+
+  .panel {
+    background: #1b2031;
     border-radius: 8px;
-    color: white;
-    font-size: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 8px 10px;
+    min-width: 100px;
+  }
+
+  .panel h3 {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+  }
+
+  #next, #hold {
+    display: grid;
+    grid-template-columns: repeat(4, 20px);
+    grid-template-rows: repeat(4, 20px);
+    gap: 1px;
+    background: var(--grid);
+    border-radius: 6px;
+  }
+
+  #next div, #hold div {
+    background: #151a28;
+    border-radius: 3px;
+    width: 20px;
+    height: 20px;
+  }
+
+  #start {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    background: #4caf50;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 8px;
     user-select: none;
+  }
+
+  #controls {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(2, 60px);
+    gap: 8px;
+    margin: 14px 0;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  .btn {
+    background: #333;
+    border: 2px solid #555;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
     cursor: pointer;
   }
+
   .btn:active {
     background: #555;
   }
 
   @media (max-width: 480px) {
     :root {
-      --cell-size: 22px;
+      --cell: 22px;
     }
-    #controls .btn {
-      width: 44px;
-      height: 44px;
-      font-size: 20px;
+
+    #next, #hold {
+      grid-template-columns: repeat(4, 16px);
+      grid-template-rows: repeat(4, 16px);
+    }
+
+    #next div, #hold div {
+      width: 16px;
+      height: 16px;
+    }
+
+    #controls {
+      grid-template-columns: repeat(3, 50px);
+      grid-template-rows: repeat(2, 50px);
+      gap: 6px;
     }
   }
 </style>
 </head>
 <body>
-  <h1>Tetris</h1>
-  <div id="game"></div>
-  <div id="info">
-    <div>점수<br><span id="score">0</span></div>
-    <div>레벨<br><span id="level">1</span></div>
-    <div>줄<br><span id="lines">0</span></div>
+  </h1>Classic Tetris</h1>
+  <button id="start">게임 시작</button>
+
+  <div id="wrapper" style="display:none;">
+    <div id="board"></div>
+
+    <div id="side">
+      <div class="panel">
+        <h3>다음</h3>
+        <div id="next"></div>
+      </div>
+      <div class="panel">
+        <h3>보류</h3>
+        <div id="hold"></div>
+      </div>
+      <div class="panel">
+        <h3>점수</h3>
+        <div id="score">0</div>
+      </div>
+      <div class="panel">
+        <h3>레벨</h3>
+        <div id="level">1</div>
+      </div>
+      <div class="panel">
+        <h3>줄</h3>
+        <div id="lines">0</div>
+      </div>
+    </div>
   </div>
-  <button id="startBtn">게임 시작</button>
 
   <div id="controls" style="display:none;">
-    <div class="btn" id="leftBtn">⬅️</div>
-    <div class="btn" id="rotateBtn">🔄</div>
-    <div class="btn" id="rightBtn">➡️</div>
-    <div class="btn" id="downBtn">⬇️</div>
-    <div class="btn" id="dropBtn">⏬</div>
+    <div class="btn" id="left">⬅️</div>
+    <div class="btn" id="rotate">🔄</div>
+    <div class="btn" id="right">➡️</div>
+    <div class="btn" style="grid-column: 2/3" id="down">⬇️</div>
+    <div class="btn" style="grid-column: 2/3" id="drop">🧨</div>
     <div class="btn" id="holdBtn">⏸️</div>
   </div>
 
@@ -145,399 +211,382 @@
 (() => {
   const ROWS = 20;
   const COLS = 10;
-  const game = document.getElementById('game');
+
+  const boardEl = document.getElementById('board');
+  const nextEl = document.getElementById('next');
+  const holdEl = document.getElementById('hold');
   const scoreEl = document.getElementById('score');
   const levelEl = document.getElementById('level');
   const linesEl = document.getElementById('lines');
-  const startBtn = document.getElementById('startBtn');
+  const startBtn = document.getElementById('start');
+  const wrapper = document.getElementById('wrapper');
   const controls = document.getElementById('controls');
 
-  // 테트리스 블록 모양 (4x4 matrix)
+  const leftBtn = document.getElementById('left');
+  const rightBtn = document.getElementById('right');
+  const downBtn = document.getElementById('down');
+  const rotateBtn = document.getElementById('rotate');
+  const dropBtn = document.getElementById('drop');
+  const holdBtn = document.getElementById('holdBtn');
+
+  // 블록 모양 (회전별 오프셋)
   const SHAPES = {
     I: [
-      [
-        [0,0,0,0],
-        [1,1,1,1],
-        [0,0,0,0],
-        [0,0,0,0]
-      ],
-      [
-        [0,0,1,0],
-        [0,0,1,0],
-        [0,0,1,0],
-        [0,0,1,0]
-      ]
-    ],
-    J: [
-      [
-        [1,0,0],
-        [1,1,1],
-        [0,0,0]
-      ],
-      [
-        [0,1,1],
-        [0,1,0],
-        [0,1,0]
-      ],
-      [
-        [0,0,0],
-        [1,1,1],
-        [0,0,1]
-      ],
-      [
-        [0,1,0],
-        [0,1,0],
-        [1,1,0]
-      ],
-    ],
-    L: [
-      [
-        [0,0,1],
-        [1,1,1],
-        [0,0,0]
-      ],
-      [
-        [0,1,0],
-        [0,1,0],
-        [0,1,1]
-      ],
-      [
-        [0,0,0],
-        [1,1,1],
-        [1,0,0]
-      ],
-      [
-        [1,1,0],
-        [0,1,0],
-        [0,1,0]
-      ]
+      [0,1,2,3],
+      [0,COLS,COLS*2,COLS*3]
     ],
     O: [
-      [
-        [1,1],
-        [1,1]
-      ]
-    ],
-    S: [
-      [
-        [0,1,1],
-        [1,1,0],
-        [0,0,0]
-      ],
-      [
-        [0,1,0],
-        [0,1,1],
-        [0,0,1]
-      ]
-    ],
-    Z: [
-      [
-        [1,1,0],
-        [0,1,1],
-        [0,0,0]
-      ],
-      [
-        [0,0,1],
-        [0,1,1],
-        [0,1,0]
-      ]
+      [0,1,COLS,COLS+1]
     ],
     T: [
-      [
-        [0,1,0],
-        [1,1,1],
-        [0,0,0]
-      ],
-      [
-        [0,1,0],
-        [0,1,1],
-        [0,1,0]
-      ],
-      [
-        [0,0,0],
-        [1,1,1],
-        [0,1,0]
-      ],
-      [
-        [0,1,0],
-        [1,1,0],
-        [0,1,0]
-      ]
+      [1,COLS,COLS+1,COLS+2],
+      [1,COLS+1,COLS+2,COLS*2+1],
+      [COLS,COLS+1,COLS+2,COLS*2+1],
+      [1,COLS,COLS+1,COLS*2+1]
+    ],
+    S: [
+      [1,2,COLS,COLS+1],
+      [0,COLS,COLS+1,COLS*2+1]
+    ],
+    Z: [
+      [0,1,COLS+1,COLS+2],
+      [2,COLS+1,COLS+2,COLS*2+1]
+    ],
+    J: [
+      [0,COLS,COLS+1,COLS+2],
+      [1,2,COLS+1,COLS*2+1],
+      [COLS,COLS+1,COLS+2,COLS*2+2],
+      [1,COLS+1,COLS*2,COLS*2+1]
+    ],
+    L: [
+      [2,COLS,COLS+1,COLS+2],
+      [1,COLS+1,COLS*2+1,COLS*2+2],
+      [COLS,COLS+1,COLS+2,COLS*2],
+      [0,1,COLS+1,COLS*2+1]
     ]
   };
 
   const COLORS = {
-    I: 'I', J: 'J', L: 'L', O: 'O', S: 'S', Z: 'Z', T: 'T'
+    I: 'I',
+    O: 'O',
+    T: 'T',
+    S: 'S',
+    Z: 'Z',
+    J: 'J',
+    L: 'L'
   };
 
   let board = [];
-  let currentPiece = null;
-  let currentPos = {x: 0, y: 0};
-  let currentRotation = 0;
-  let score = 0;
-  let level = 1;
-  let lines = 0;
-  let dropInterval = 1000;
-  let dropTimer = null;
+  let current = null;
+  let nextQueue = [];
   let holdPiece = null;
   let canHold = true;
 
+  let score = 0;
+  let level = 1;
+  let linesCleared = 0;
+
+  let playing = false;
+  let dropInterval = 1000;
+  let dropTimer = null;
+
   function createBoard() {
-    board = [];
-    for(let r=0; r<ROWS; r++) {
-      const row = new Array(COLS).fill(0);
-      board.push(row);
+    board = Array(ROWS * COLS).fill(0);
+  }
+
+  function randomBlock() {
+    const types = Object.keys(SHAPES);
+    return types[Math.floor(Math.random() * types.length)];
+  }
+
+  function refillQueue() {
+    while(nextQueue.length < 5) {
+      nextQueue.push(randomBlock());
     }
+    drawMini(nextEl, nextQueue[0]);
   }
 
   function drawBoard() {
-    game.innerHTML = '';
-    for(let r=0; r<ROWS; r++) {
-      for(let c=0; c<COLS; c++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        if(board[r][c] !== 0) {
-          cell.classList.add(COLORS[board[r][c]]);
-        }
-        game.appendChild(cell);
+    boardEl.innerHTML = '';
+    for(let i=0; i < ROWS * COLS; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      const val = board[i];
+      if(val && COLORS[val]) {
+        cell.classList.add(COLORS[val]);
       }
+      boardEl.appendChild(cell);
     }
   }
 
-  function getCurrentShape() {
-    return SHAPES[currentPiece][currentRotation];
-  }
-
-  function drawCurrentPiece() {
-    const shape = getCurrentShape();
-    for(let r=0; r<shape.length; r++) {
-      for(let c=0; c<shape[r].length; c++) {
-        if(shape[r][c]) {
-          const x = currentPos.x + c;
-          const y = currentPos.y + r;
-          if(y >= 0 && y < ROWS && x >=0 && x < COLS) {
-            const idx = y * COLS + x;
-            game.children[idx].classList.add(COLORS[currentPiece]);
-          }
-        }
-      }
+  function drawMini(el, type) {
+    el.innerHTML = '';
+    for(let i=0; i<16; i++) {
+      const c = document.createElement('div');
+      c.classList.add('cell');
+      el.appendChild(c);
     }
+    if (!type) return;
+    const shape = SHAPES[type][0];
+    shape.forEach(pos => {
+      const cell = el.children[pos];
+      if(cell) cell.classList.add(COLORS[type]);
+    });
   }
 
-  function collision(xOffset=0, yOffset=0, rotation=null) {
-    const shape = SHAPES[currentPiece][rotation === null ? currentRotation : rotation];
-    for(let r=0; r<shape.length; r++) {
-      for(let c=0; c<shape[r].length; c++) {
-        if(shape[r][c]) {
-          const x = currentPos.x + c + xOffset;
-          const y = currentPos.y + r + yOffset;
-          if(x < 0 || x >= COLS || y >= ROWS) return true;
-          if(y >= 0 && board[y][x] !== 0) return true;
-        }
-      }
+  function getCurrentPositions() {
+    const shapeArr = SHAPES[current.type][current.rotation];
+    return shapeArr.map(offset => current.pos + offset);
+  }
+
+  function isCollision(pos, type, rotation) {
+    const shapeArr = SHAPES[type][rotation];
+    for(let offset of shapeArr) {
+      const idx = pos + offset;
+      const x = idx % COLS;
+      const y = Math.floor(idx / COLS);
+
+      if (x < 0 || x >= COLS || y >= ROWS) return true;
+      if (y < 0) continue;
+
+      if (board[idx] !== 0) return true;
     }
     return false;
   }
 
-  function placePiece() {
-    const shape = getCurrentShape();
-    for(let r=0; r<shape.length; r++) {
-      for(let c=0; c<shape[r].length; c++) {
-        if(shape[r][c]) {
-          const x = currentPos.x + c;
-          const y = currentPos.y + r;
-          if(y >= 0 && y < ROWS && x >= 0 && x < COLS) {
-            board[y][x] = currentPiece;
-          }
+  function drawCurrent() {
+    drawBoard();
+    const positions = getCurrentPositions();
+    const cells = boardEl.children;
+
+    // 고스트 위치 그리기
+    const ghostPos = findGhostPos();
+    if(ghostPos !== null) {
+      const ghostShape = SHAPES[current.type][current.rotation];
+      ghostShape.forEach(offset => {
+        const idx = ghostPos + offset;
+        if (idx >= 0 && idx < board.length) {
+          cells[idx].classList.add('ghost', COLORS[current.type]);
         }
-      }
+      });
     }
+
+    // 현재 블록 그리기
+    positions.forEach(idx => {
+      if(idx >= 0 && idx < board.length) {
+        cells[idx].classList.add('active', COLORS[current.type]);
+      }
+    });
+  }
+
+  function findGhostPos() {
+    let pos = current.pos;
+    while(!isCollision(pos + COLS, current.type, current.rotation)) {
+      pos += COLS;
+    }
+    return pos;
+  }
+
+  function fixCurrent() {
+    const positions = getCurrentPositions();
+    positions.forEach(idx => {
+      if(idx >= 0 && idx < board.length) {
+        board[idx] = current.type;
+      }
+    });
   }
 
   function clearLines() {
-    let cleared = 0;
-    for(let r=ROWS-1; r>=0; r--) {
-      if(board[r].every(cell => cell !== 0)) {
-        board.splice(r, 1);
-        board.unshift(new Array(COLS).fill(0));
-        cleared++;
-        r++; // 다시 체크
+    let linesRemoved = 0;
+    for(let row = ROWS-1; row >= 0; row--) {
+      let isFull = true;
+      for(let col = 0; col < COLS; col++) {
+        if(board[row * COLS + col] === 0) {
+          isFull = false;
+          break;
+        }
+      }
+      if(isFull) {
+        for(let r = row; r > 0; r--) {
+          for(let c = 0; c < COLS; c++) {
+            board[r * COLS + c] = board[(r-1)*COLS + c];
+          }
+        }
+        for(let c=0; c < COLS; c++) {
+          board[c] = 0;
+        }
+        linesRemoved++;
+        row++;
       }
     }
-    if(cleared > 0) {
-      lines += cleared;
-      score += [0,100,300,500,800][cleared] * level;
-      if(lines >= level * 10) {
+    if(linesRemoved > 0) {
+      linesCleared += linesRemoved;
+      const pointsMap = [0, 100, 300, 500, 800];
+      score += pointsMap[linesRemoved] * level;
+      if(linesCleared >= level * 10) {
         level++;
-        dropInterval = Math.max(100, dropInterval - 100);
-        clearInterval(dropTimer);
-        dropTimer = setInterval(dropPiece, dropInterval);
+        setDropInterval();
       }
-      updateInfo();
+      updateHUD();
     }
   }
 
-  function updateInfo() {
+  function updateHUD() {
     scoreEl.textContent = score;
     levelEl.textContent = level;
-    linesEl.textContent = lines;
+    linesEl.textContent = linesCleared;
   }
 
-  function spawnPiece() {
-    const pieces = Object.keys(SHAPES);
-    currentPiece = pieces[Math.floor(Math.random() * pieces.length)];
-    currentRotation = 0;
-    currentPos = {x: Math.floor(COLS / 2) - 2, y: -2};
+  function newPiece() {
+    current = {
+      type: nextQueue.shift(),
+      rotation: 0,
+      pos: 3
+    };
+    refillQueue();
     canHold = true;
-    if(collision(0,0,currentRotation)) {
+
+    if(isCollision(current.pos, current.type, current.rotation)) {
       gameOver();
-    }
-  }
-
-  function movePiece(dx, dy) {
-    if(!collision(dx, dy)) {
-      currentPos.x += dx;
-      currentPos.y += dy;
-      return true;
-    }
-    return false;
-  }
-
-  function rotatePiece() {
-    const nextRotation = (currentRotation + 1) % SHAPES[currentPiece].length;
-    if(!collision(0,0,nextRotation)) {
-      currentRotation = nextRotation;
       return;
     }
-    // 벽킥 시도 (왼쪽, 오른쪽)
-    if(!collision(-1, 0, nextRotation)) {
-      currentPos.x--;
-      currentRotation = nextRotation;
-      return;
-    }
-    if(!collision(1, 0, nextRotation)) {
-      currentPos.x++;
-      currentRotation = nextRotation;
-      return;
-    }
+    drawCurrent();
   }
 
-  function dropPiece() {
-    if(!movePiece(0,1)) {
-      placePiece();
+  function setDropInterval() {
+    if(dropTimer) clearInterval(dropTimer);
+    dropInterval = Math.max(100, 1000 - (level - 1) * 100);
+    dropTimer = setInterval(() => {
+      dropDown();
+    }, dropInterval);
+  }
+
+  function dropDown() {
+    if(!isCollision(current.pos + COLS, current.type, current.rotation)) {
+      current.pos += COLS;
+      drawCurrent();
+    } else {
+      fixCurrent();
       clearLines();
-      spawnPiece();
+      newPiece();
     }
-    render();
   }
 
   function hardDrop() {
-    while(movePiece(0,1)) {
-      score += 2;
+    while(!isCollision(current.pos + COLS, current.type, current.rotation)) {
+      current.pos += COLS;
+      score++;
     }
-    placePiece();
+    fixCurrent();
     clearLines();
-    spawnPiece();
-    updateInfo();
-    render();
+    newPiece();
+    drawCurrent();
   }
 
-  function holdCurrent() {
-    if(!canHold) return;
-    if(holdPiece === null) {
-      holdPiece = currentPiece;
-      spawnPiece();
+  function moveLeft() {
+    if(!isCollision(current.pos -1, current.type, current.rotation)) {
+      current.pos--;
+      drawCurrent();
+    }
+  }
+  function moveRight() {
+    if(!isCollision(current.pos +1, current.type, current.rotation)) {
+      current.pos++;
+      drawCurrent();
+    }
+  }
+
+  function rotate() {
+    const newRot = (current.rotation + 1) % SHAPES[current.type].length;
+    if(!isCollision(current.pos, current.type, newRot)) {
+      current.rotation = newRot;
+      drawCurrent();
     } else {
-      [holdPiece, currentPiece] = [currentPiece, holdPiece];
-      currentRotation = 0;
-      currentPos = {x: Math.floor(COLS / 2) - 2, y: -2};
-      if(collision(0,0,currentRotation)) {
-        gameOver();
+      for(let kick of [-1,1,-2,2]) {
+        if(!isCollision(current.pos + kick, current.type, newRot)) {
+          current.pos += kick;
+          current.rotation = newRot;
+          drawCurrent();
+          break;
+        }
       }
     }
+  }
+
+  function hold() {
+    if(!canHold) return;
+    if(holdPiece === null) {
+      holdPiece = current.type;
+      newPiece();
+    } else {
+      let temp = current.type;
+      current.type = holdPiece;
+      holdPiece = temp;
+      current.pos = 3;
+      current.rotation = 0;
+      if(isCollision(current.pos, current.type, current.rotation)) {
+        gameOver();
+        return;
+      }
+      drawCurrent();
+    }
     canHold = false;
-    render();
+    drawMini(holdEl, holdPiece);
   }
 
   function gameOver() {
+    playing = false;
     clearInterval(dropTimer);
-    alert(`게임 오버! 점수: ${score}`);
-    startBtn.style.display = 'block';
+    alert(`게임 오버!\n최종 점수: ${score}`);
+    startBtn.style.display = 'inline-block';
+    wrapper.style.display = 'none';
     controls.style.display = 'none';
-  }
-
-  function render() {
-    drawBoard();
-    drawCurrentPiece();
   }
 
   function startGame() {
     createBoard();
+    nextQueue = [];
+    refillQueue();
+    holdPiece = null;
+    canHold = true;
     score = 0;
     level = 1;
-    lines = 0;
-    dropInterval = 1000;
-    updateInfo();
-    spawnPiece();
-    render();
+    linesCleared = 0;
+    updateHUD();
     startBtn.style.display = 'none';
-    controls.style.display = 'flex';
-
-    if(dropTimer) clearInterval(dropTimer);
-    dropTimer = setInterval(dropPiece, dropInterval);
+    wrapper.style.display = 'flex';
+    controls.style.display = 'grid';
+    drawMini(holdEl, null);
+    newPiece();
+    setDropInterval();
+    playing = true;
   }
 
-  // 키보드 입력 처리
+  // 키보드 이벤트
   document.addEventListener('keydown', e => {
-    if(startBtn.style.display !== 'none') return; // 게임중 아니면 무시
-
+    if(!playing) return;
     switch(e.key) {
-      case 'ArrowLeft':
-        movePiece(-1, 0);
-        render();
-        break;
-      case 'ArrowRight':
-        movePiece(1, 0);
-        render();
-        break;
-      case 'ArrowDown':
-        movePiece(0,1);
-        score++;
-        updateInfo();
-        render();
-        break;
-      case 'ArrowUp':
-        rotatePiece();
-        render();
-        break;
-      case ' ':
-        e.preventDefault();
-        hardDrop();
-        break;
-      case 'c':
-      case 'C':
-        holdCurrent();
-        break;
+      case 'ArrowLeft': moveLeft(); break;
+      case 'ArrowRight': moveRight(); break;
+      case 'ArrowDown': dropDown(); break;
+      case 'ArrowUp': rotate(); break;
+      case ' ': hardDrop(); break;
+      case 'Shift': hold(); break;
     }
   });
 
-  // 버튼 입력 처리
-  function bindBtn(id, fn) {
-    const btn = document.getElementById(id);
-    btn.addEventListener('click', () => {
-      if(startBtn.style.display !== 'none' && id !== 'startBtn') return;
-      fn();
-    });
-  }
-  bindBtn('leftBtn', () => { movePiece(-1, 0); render(); });
-  bindBtn('rightBtn', () => { movePiece(1, 0); render(); });
-  bindBtn('downBtn', () => { movePiece(0,1); score++; updateInfo(); render(); });
-  bindBtn('rotateBtn', () => { rotatePiece(); render(); });
-  bindBtn('dropBtn', () => { hardDrop(); });
-  bindBtn('holdBtn', () => { holdCurrent(); });
+  // 모바일 버튼 이벤트
+  leftBtn.addEventListener('click', moveLeft);
+  rightBtn.addEventListener('click', moveRight);
+  downBtn.addEventListener('click', dropDown);
+  rotateBtn.addEventListener('click', rotate);
+  dropBtn.addEventListener('click', hardDrop);
+  holdBtn.addEventListener('click', hold);
 
   startBtn.addEventListener('click', startGame);
+
 })();
 </script>
+
 </body>
 </html>
