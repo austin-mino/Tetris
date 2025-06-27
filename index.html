@@ -27,18 +27,9 @@
 
     h1 { margin: 14px 0 4px; font-size: 1.8rem; }
 
-    #wrapper {
-      display: none;
-      gap: 18px;
-      margin-top: 6px;
-      display: flex;
-    }
+    #wrapper { gap: 18px; margin-top: 6px; display: none; }
 
-    #board {
-      display: grid;
-      gap: var(--gap);
-      background: var(--grid);
-    }
+    #board { display: grid; gap: var(--gap); background: var(--grid); }
 
     .cell { width: var(--cell); height: var(--cell); background: #151a28; }
 
@@ -46,13 +37,9 @@
     .S { background: var(--S); } .Z { background: var(--Z); } .L { background: var(--L); } .J { background: var(--J); }
 
     .active { outline: 1px solid #fff; }
-    .ghost { background: rgba(255, 255, 255, .18); }
+    .ghost  { background: rgba(255,255,255,.18); }
 
-    #side {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    #side { display: flex; flex-direction: column; gap: 10px; }
 
     .panel {
       background: #1b2031;
@@ -60,11 +47,7 @@
       padding: 8px 10px;
       min-width: 100px;
     }
-
-    .panel h3 {
-      margin: 0 0 4px;
-      font-size: .9rem;
-    }
+    .panel h3 { margin: 0 0 4px; font-size: .9rem; }
 
     .mini {
       display: grid;
@@ -73,7 +56,6 @@
       gap: 1px;
       background: var(--grid);
     }
-
     .mini div { width: 18px; height: 18px; background: #151a28; }
 
     #controls {
@@ -84,7 +66,6 @@
       margin: 14px 0;
       user-select: none;
     }
-
     .btn {
       background: #333;
       border: 2px solid #555;
@@ -95,7 +76,6 @@
       font-size: 1.4rem;
       color: #fff;
     }
-
     .btn:active { background: #555; }
 
     #start {
@@ -148,228 +128,209 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const $ = id => document.getElementById(id);
-      const rows = 20, cols = 10;
-      const board = $('board');
-      let grid = [], queue = [], current = null;
-      let holdPiece = null, canHold = true;
-      let playing = false;
-      let score = 0, level = 1, lines = 0;
-      const baseInterval = 700, lockDelay = 500;
-      let timer, lockTimer = 0;
+  document.addEventListener('DOMContentLoaded', () => {
+    const $ = id => document.getElementById(id);
+    const rows = 20, cols = 10;
+    const board = $('board');
+    let grid = [], queue = [], current = null;
+    let holdPiece = null, canHold = true;
+    let playing = false;
+    let score = 0, level = 1, lines = 0;
+    const baseInterval = 700, lockDelay = 500;
+    let timer, lockTimer = 0;
 
-      const SHAPES = {
-        T: [[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]],
-        O: [[0,1,cols,cols+1]],
-        I: [[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]],
-        S: [[1,2,cols,cols+1],[0,cols,cols+1,cols*2]],
-        Z: [[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]],
-        L: [[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]],
-        J: [[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]]
-      };
-      const COLORS = {T:'T',O:'O',I:'I',S:'S',Z:'Z',L:'L',J:'J'};
+    const SHAPES = {
+      T: [[1,cols,cols+1,cols+2],[1,cols+1,cols+2,cols*2+1],[cols,cols+1,cols+2,cols*2+1],[1,cols,cols+1,cols*2+1]],
+      O: [[0,1,cols,cols+1]],
+      I: [[1,cols+1,cols*2+1,cols*3+1],[cols,cols+1,cols+2,cols+3]],
+      S: [[1,2,cols,cols+1],[0,cols,cols+1,cols*2]],
+      Z: [[0,1,cols+1,cols+2],[2,cols,cols+1,cols*2+1]],
+      L: [[0,cols,cols*2,cols*2+1],[cols,cols+1,cols+2,2],[0,1,cols+1,cols*2+1],[cols,cols*2,cols*2+1,cols*2+2]],
+      J: [[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]]
+    };
+    const COLORS = {T:'T',O:'O',I:'I',S:'S',Z:'Z',L:'L',J:'J'};
 
-      Object.defineProperty(Object.prototype,'shape',{
-        value(){ return SHAPES[this.name][this.rot]; }, enumerable:false
+    Object.defineProperty(Object.prototype,'shape',{ value(){ return SHAPES[this.name][this.rot]; }, enumerable:false });
+
+    /* ========== 그리드 생성 ========== */
+    function buildGrid(){
+      board.style.gridTemplateColumns = `repeat(${cols},var(--cell))`;
+      board.style.gridTemplateRows    = `repeat(${rows},var(--cell))`;
+      board.innerHTML = ''; grid = [];
+      for(let i=0;i<rows*cols;i++){
+        const d = document.createElement('div'); d.className='cell';
+        board.appendChild(d); grid.push(d);
+      }
+    }
+
+    /* ========== 미니 & HUD ========== */
+    function drawMini(el,piece){
+      el.innerHTML=''; const cells=[];
+      for(let i=0;i<16;i++){ const d=document.createElement('div'); d.className='cell'; el.appendChild(d); cells.push(d);}
+      if(!piece) return;
+      SHAPES[piece][0].forEach(i=>{
+        const x=i%cols, y=Math.floor(i/cols);
+        cells[y*4+x].classList.add(COLORS[piece]);
       });
+    }
+    function hud(){ $('score').textContent=score; $('level').textContent=level; $('lines').textContent=lines; }
 
-      function buildGrid(){
-        board.style.gridTemplateColumns = `repeat(${cols},var(--cell))`;
-        board.style.gridTemplateRows    = `repeat(${rows},var(--cell))`;
-        board.innerHTML = ''; grid = [];
-        for(let i=0;i<rows*cols;i++){
-          const d = document.createElement('div'); d.className='cell';
-          board.appendChild(d); grid.push(d);
+    /* ========== 큐 & 새 블록 ========== */
+    const rnd = () => Object.keys(SHAPES)[Math.floor(Math.random()*7)];
+    function refill(){ while(queue.length<5) queue.push(rnd()); drawMini($('next'),queue[0]); }
+
+    /* ========== 충돌 / 고스트 / 그리기 ========== */
+    function hit(shape, off=0){
+      return shape.some(i=>{
+        const ni=current.pos+off+i, x=ni%cols, y=Math.floor(ni/cols);
+        return x<0||x>=cols||y>=rows||grid[ni]?.classList.contains('frozen');
+      });
+    }
+    const dropDist   = () => {let d=0; while(!hit(current.shape(),(d+1)*cols)) d++; return d;};
+    const clearGhost = () => grid.forEach(c=>c.classList.remove('ghost'));
+    const drawCells  = (idxs,cls,color) => idxs.forEach(i=>grid[i]?.classList.add(cls,color));
+    const eraseCells = (idxs,color)     => idxs.forEach(i=>grid[i]?.classList.remove('active',color));
+
+    function placeGhost(){
+      clearGhost();
+      const d=dropDist();
+      current.shape().forEach(i=>grid[current.pos+i+d*cols]?.classList.add('ghost'));
+    }
+    function drawCurr(){ drawCells(current.shape().map(i=>current.pos+i),'active',COLORS[current.name]); placeGhost(); }
+    function eraseCurr(){ eraseCells(current.shape().map(i=>current.pos+i),COLORS[current.name]); clearGhost(); }
+
+    /* ========== 게임 진행 ========== */
+    function newPiece(){
+      current={name:queue.shift(),pos:3,rot:0}; refill(); canHold=true;
+      if(hit(current.shape())) return gameOver();
+      drawCurr();
+    }
+    function lockPiece(){
+      eraseCurr();
+      current.shape().forEach(i=>grid[current.pos+i].classList.add('frozen',COLORS[current.name]));
+      clearGhost(); delLines(); newPiece(); setGravity();
+    }
+    function delLines(){
+      let cleared=0;
+      for(let r=rows-1;r>=0;r--){
+        if([...Array(cols)].every((_,c)=>grid[r*cols+c].classList.contains('frozen'))){
+          cleared++;
+          for(let c=0;c<cols;c++) grid[r*cols+c].className='cell';
+          for(let rr=r;rr>0;rr--){
+            for(let c=0;c<cols;c++){
+              grid[rr*cols+c].className=grid[(rr-1)*cols+c].className;
+            }
+          }
+          for(let c=0;c<cols;c++) grid[c].className='cell';
+          r++;
         }
       }
-
-      function drawMini(el,piece){
-        el.innerHTML=''; const cells=[];
-        for(let i=0;i<16;i++){ const d=document.createElement('div'); d.className='cell'; el.appendChild(d); cells.push(d);}
-        if(!piece) return;
-        SHAPES[piece][0].forEach(i=>{
-          const x=i%cols, y=Math.floor(i/cols);
-          cells[y*4+x].classList.add(COLORS[piece]);
-        });
+      if(cleared){
+        score += [0,100,300,500,800][cleared]*level;
+        lines += cleared;
+        if(lines>=level*10){ level++; setGravity(); }
+        hud();
       }
+    }
 
-      function hud(){
-        $('score').textContent = score;
-        $('level').textContent = level;
-        $('lines').textContent = lines;
+    /* ========== 움직임 & 회전 ========== */
+    function move(dx,dy=0){
+      eraseCurr();
+      if(!hit(current.shape(),dx+dy*cols)){
+        current.pos += dx+dy*cols;
+        if(dy){ score++; hud(); }
+        lockTimer=0;
       }
-
-      function rnd(){ return Object.keys(SHAPES)[Math.floor(Math.random()*7)]; }
-      function refill(){
-        while(queue.length<5) queue.push(rnd());
-        drawMini($('next'), queue[0]);
+      drawCurr();
+    }
+    function rotate(){                // ← 시계방향 90°
+      eraseCurr();
+      const nxt=(current.rot+1)%SHAPES[current.name].length; // +1 = CW
+      for(const k of [0,-1,1,-2,2]){                       // 킥 테스트
+        if(!hit(SHAPES[current.name][nxt],k)){
+          current.rot=nxt; current.pos+=k; break;
+        }
       }
-
-      function hit(shape, off=0){
-        return shape.some(i=>{
-          const ni = current.pos + off + i;
-          const x = ni % cols, y = Math.floor(ni / cols);
-          return x<0 || x>=cols || y>=rows || grid[ni]?.classList.contains('frozen');
-        });
-      }
-
-      function dropDist(){ let d=0; while(!hit(current.shape(), (d+1)*cols)) d++; return d; }
-
-      function clearGhost(){ grid.forEach(c=>c.classList.remove('ghost')); }
-      function drawCells(idxs, cls, color){ idxs.forEach(i=>grid[i]?.classList.add(cls, color)); }
-      function eraseCells(idxs, color){ idxs.forEach(i=>grid[i]?.classList.remove('active', color)); }
-
-      function drawCurr(){
-        drawCells(current.shape().map(i=>current.pos+i), 'active', COLORS[current.name]);
-        placeGhost();
-      }
-
-      function eraseCurr(){
-        eraseCells(current.shape().map(i=>current.pos+i), COLORS[current.name]);
-        clearGhost();
-      }
-
-      function placeGhost(){
-        clearGhost();
-        const d = dropDist();
-        current.shape().forEach(i => grid[current.pos + i + d * cols]?.classList.add('ghost'));
-      }
-
-      function newPiece(){
-        current = { name: queue.shift(), pos: 3, rot: 0 };
-        refill(); canHold = true;
+      drawCurr();
+    }
+    const soft=()=>move(0,1);
+    function hard(){
+      eraseCurr(); const d=dropDist();
+      current.pos+=d*cols; score+=d*2; drawCurr(); lockPiece(); hud();
+    }
+    function hold(){
+      if(!canHold) return;
+      eraseCurr(); clearGhost();
+      if(!holdPiece){ holdPiece=current.name; newPiece(); }
+      else { [holdPiece,current.name]=[current.name,holdPiece];
+        current.pos=3; current.rot=0;
         if(hit(current.shape())) return gameOver();
         drawCurr();
       }
+      canHold=false; drawMini($('hold'),holdPiece);
+    }
 
-      function lockPiece(){
-        eraseCurr();
-        current.shape().forEach(i => grid[current.pos + i].classList.add('frozen', COLORS[current.name]));
-        clearGhost(); delLines(); newPiece(); setGravity();
+    /* ========== 중력 & 타이머 ========== */
+    function setGravity(){
+      clearInterval(timer);
+      timer=setInterval(()=>{
+        if(!lockTimer) soft();
+        else if(Date.now()-lockTimer>lockDelay) lockPiece();
+      },Math.max(100,baseInterval-(level-1)*50));
+    }
+
+    /* ========== 시작 & 종료 ========== */
+    function startGame(){
+      if(playing) return;
+      playing=true;
+      $('start').style.display='none';
+      $('wrapper').style.display='flex';
+      $('controls').style.display='grid';
+      score=level=lines=0; hud();
+      buildGrid(); queue=[]; refill();
+      holdPiece=null; drawMini($('hold'),null);
+      newPiece(); setGravity();
+    }
+    function gameOver(){
+      clearInterval(timer);
+      alert(`게임 오버! 총 점수: ${score}`);
+      playing=false;
+      $('wrapper').style.display='none';
+      $('controls').style.display='none';
+      $('start').style.display='block';
+    }
+
+    $('start').onclick=startGame;
+
+    /* ------- 키보드 ------- */
+    document.addEventListener('keydown',e=>{
+      if(!playing) return;
+      switch(e.key){
+        case 'ArrowLeft': move(-1); break;
+        case 'ArrowRight': move(1); break;
+        case 'ArrowDown': soft(); break;
+        case 'ArrowUp': rotate(); break;
+        case ' ': e.preventDefault(); hard(); break;
+        case 'c': case 'C': case 'Shift': hold(); break;
       }
-
-      function delLines(){
-        let cleared = 0;
-        for(let r=rows-1; r>=0; r--){
-          if([...Array(cols)].every((_,c)=>grid[r*cols+c].classList.contains('frozen'))){
-            cleared++;
-            for(let c=0; c<cols; c++) grid[r*cols+c].className='cell';
-            for(let rr=r; rr>0; rr--){
-              for(let c=0; c<cols; c++){
-                grid[rr*cols+c].className = grid[(rr-1)*cols+c].className;
-              }
-            }
-            for(let c=0; c<cols; c++) grid[c].className = 'cell';
-            r++;
-          }
-        }
-        if(cleared){
-          score += [0,100,300,500,800][cleared] * level;
-          lines += cleared;
-          if(lines >= level * 10){ level++; setGravity(); }
-          hud();
-        }
-      }
-
-      function move(dx, dy=0){
-        eraseCurr();
-        if(!hit(current.shape(), dx + dy * cols)){
-          current.pos += dx + dy * cols;
-          if(dy){ score++; hud(); }
-          lockTimer = 0;
-        }
-        drawCurr();
-      }
-
-      function rotate(){
-        eraseCurr();
-        const nxt = (current.rot + 1) % SHAPES[current.name].length;
-        for(const k of [0,-1,1,-2,2]){
-          if(!hit(SHAPES[current.name][nxt],k)){
-            current.rot = nxt; current.pos += k; break;
-          }
-        }
-        drawCurr();
-      }
-
-      function soft(){ move(0,1); }
-
-      function hard(){
-        eraseCurr();
-        const d = dropDist(); current.pos += d * cols; score += d * 2;
-        drawCurr(); lockPiece(); hud();
-      }
-
-      function hold(){
-        if(!canHold) return;
-        eraseCurr(); clearGhost();
-        if(!holdPiece){
-          holdPiece = current.name; newPiece();
-        } else {
-          [holdPiece, current.name] = [current.name, holdPiece];
-          current.pos = 3; current.rot = 0;
-          if(hit(current.shape())) return gameOver();
-          drawCurr();
-        }
-        canHold = false; drawMini($('hold'), holdPiece);
-      }
-
-      function setGravity(){
-        clearInterval(timer);
-        timer = setInterval(() => {
-          if(!lockTimer) soft();
-          else if(Date.now()-lockTimer > lockDelay) lockPiece();
-        }, Math.max(100, baseInterval - (level - 1) * 50));
-      }
-
-      function startGame(){
-        console.log("게임 시작됨!");
-        if(playing) return;
-        playing = true;
-        $('start').style.display = 'none';
-        $('wrapper').style.display = 'flex';
-        $('controls').style.display = 'grid';
-        score = level = lines = 0; hud();
-        buildGrid(); queue = []; refill();
-        holdPiece = null; drawMini($('hold'), null);
-        newPiece(); setGravity();
-      }
-
-      function gameOver(){
-        clearInterval(timer);
-        alert(`게임 오버! 총 점수: ${score}`);
-        playing = false;
-        $('wrapper').style.display = 'none';
-        $('controls').style.display = 'none';
-        $('start').style.display = 'block';
-      }
-
-      $('start').onclick = startGame;
-
-      document.addEventListener('keydown', e => {
-        if(!playing) return;
-        switch(e.key){
-          case 'ArrowLeft': move(-1); break;
-          case 'ArrowRight': move(1); break;
-          case 'ArrowDown': soft(); break;
-          case 'ArrowUp': rotate(); break;
-          case ' ': e.preventDefault(); hard(); break;
-          case 'c': case 'C': case 'Shift': hold(); break;
-        }
-      });
-
-      [['left',()=>move(-1)],['right',()=>move(1)],['down',soft],
-       ['rotate',rotate],['drop',hard],['holdBtn',hold]]
-       .forEach(([id,fn])=>{
-         const el = $(id);
-         if(!el) return;
-         el.addEventListener('touchstart',e=>{
-           e.preventDefault();
-           fn();
-         });
-       });
     });
+
+    /* ------- 버튼(터치 + 클릭) ------- */
+    function bindButton(id,fn){
+      const el=$(id); if(!el) return;
+      ['touchstart','click'].forEach(ev=>{
+        el.addEventListener(ev,e=>{
+          e.preventDefault(); if(playing||id==='start') fn();
+        });
+      });
+    }
+    bindButton('left', ()=>move(-1));
+    bindButton('right',()=>move(1));
+    bindButton('down', soft);
+    bindButton('rotate', rotate);     // 🔄 버튼 ⇒ 시계방향 회전
+    bindButton('drop', hard);
+    bindButton('holdBtn', hold);
+  });
   </script>
 </body>
 </html>
