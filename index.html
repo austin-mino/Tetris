@@ -65,6 +65,7 @@
       gap: 8px;
       margin: 14px 0;
       user-select: none;
+      touch-action: manipulation; /* 더블탭 확대 방지 */
     }
     .btn {
       background: #333;
@@ -149,57 +150,56 @@
       J: [[1,cols+1,cols*2+1,cols*2],[0,1,2,cols+2],[1,cols+1,cols*2+1,cols*2+2],[0,cols,cols+1,cols+2]]
     };
     const COLORS = {T:'T',O:'O',I:'I',S:'S',Z:'Z',L:'L',J:'J'};
+    Object.defineProperty(Object.prototype,'shape',{value(){return SHAPES[this.name][this.rot];},enumerable:false});
 
-    Object.defineProperty(Object.prototype,'shape',{ value(){ return SHAPES[this.name][this.rot]; }, enumerable:false });
-
-    /* ========== 그리드 생성 ========== */
+    /* ===== 그리드 생성 ===== */
     function buildGrid(){
       board.style.gridTemplateColumns = `repeat(${cols},var(--cell))`;
       board.style.gridTemplateRows    = `repeat(${rows},var(--cell))`;
-      board.innerHTML = ''; grid = [];
+      board.innerHTML=''; grid=[];
       for(let i=0;i<rows*cols;i++){
-        const d = document.createElement('div'); d.className='cell';
+        const d=document.createElement('div'); d.className='cell';
         board.appendChild(d); grid.push(d);
       }
     }
 
-    /* ========== 미니 & HUD ========== */
+    /* ===== 미니/점수판 ===== */
     function drawMini(el,piece){
       el.innerHTML=''; const cells=[];
-      for(let i=0;i<16;i++){ const d=document.createElement('div'); d.className='cell'; el.appendChild(d); cells.push(d);}
+      for(let i=0;i<16;i++){const d=document.createElement('div');d.className='cell';el.appendChild(d);cells.push(d);}
       if(!piece) return;
       SHAPES[piece][0].forEach(i=>{
         const x=i%cols, y=Math.floor(i/cols);
         cells[y*4+x].classList.add(COLORS[piece]);
       });
     }
-    function hud(){ $('score').textContent=score; $('level').textContent=level; $('lines').textContent=lines; }
+    const hud=()=>{ $('score').textContent=score; $('level').textContent=level; $('lines').textContent=lines; };
 
-    /* ========== 큐 & 새 블록 ========== */
-    const rnd = () => Object.keys(SHAPES)[Math.floor(Math.random()*7)];
+    /* ===== 큐 & 새 블록 ===== */
+    const rnd=()=>Object.keys(SHAPES)[Math.floor(Math.random()*7)];
     function refill(){ while(queue.length<5) queue.push(rnd()); drawMini($('next'),queue[0]); }
 
-    /* ========== 충돌 / 고스트 / 그리기 ========== */
-    function hit(shape, off=0){
+    /* ===== 충돌/고스트/그리기 ===== */
+    function hit(shape,off=0){
       return shape.some(i=>{
-        const ni=current.pos+off+i, x=ni%cols, y=Math.floor(ni/cols);
+        const ni=current.pos+off+i,x=ni%cols,y=Math.floor(ni/cols);
         return x<0||x>=cols||y>=rows||grid[ni]?.classList.contains('frozen');
       });
     }
-    const dropDist   = () => {let d=0; while(!hit(current.shape(),(d+1)*cols)) d++; return d;};
-    const clearGhost = () => grid.forEach(c=>c.classList.remove('ghost'));
-    const drawCells  = (idxs,cls,color) => idxs.forEach(i=>grid[i]?.classList.add(cls,color));
-    const eraseCells = (idxs,color)     => idxs.forEach(i=>grid[i]?.classList.remove('active',color));
+    const dropDist=()=>{let d=0; while(!hit(current.shape(),(d+1)*cols)) d++; return d;};
+    const clearGhost=()=>grid.forEach(c=>c.classList.remove('ghost'));
+    const drawCells=(idxs,cls,color)=>idxs.forEach(i=>grid[i]?.classList.add(cls,color));
+    const eraseCells=(idxs,color)=>idxs.forEach(i=>grid[i]?.classList.remove('active',color));
 
     function placeGhost(){
       clearGhost();
       const d=dropDist();
       current.shape().forEach(i=>grid[current.pos+i+d*cols]?.classList.add('ghost'));
     }
-    function drawCurr(){ drawCells(current.shape().map(i=>current.pos+i),'active',COLORS[current.name]); placeGhost(); }
-    function eraseCurr(){ eraseCells(current.shape().map(i=>current.pos+i),COLORS[current.name]); clearGhost(); }
+    const drawCurr=()=>{drawCells(current.shape().map(i=>current.pos+i),'active',COLORS[current.name]);placeGhost();};
+    const eraseCurr=()=>{eraseCells(current.shape().map(i=>current.pos+i),COLORS[current.name]);clearGhost();};
 
-    /* ========== 게임 진행 ========== */
+    /* ===== 게임 진행 ===== */
     function newPiece(){
       current={name:queue.shift(),pos:3,rot:0}; refill(); canHold=true;
       if(hit(current.shape())) return gameOver();
@@ -228,32 +228,32 @@
       if(cleared){
         score += [0,100,300,500,800][cleared]*level;
         lines += cleared;
-        if(lines>=level*10){ level++; setGravity(); }
+        if(lines>=level*10){level++; setGravity();}
         hud();
       }
     }
 
-    /* ========== 움직임 & 회전 ========== */
+    /* ===== 이동/회전 ===== */
     function move(dx,dy=0){
       eraseCurr();
       if(!hit(current.shape(),dx+dy*cols)){
         current.pos += dx+dy*cols;
-        if(dy){ score++; hud(); }
+        if(dy){score++; hud();}
         lockTimer=0;
       }
       drawCurr();
     }
-    function rotate(){                // ← 시계방향 90°
+    function rotate(){                 // 시계방향 90°
       eraseCurr();
       const nxt=(current.rot+1)%SHAPES[current.name].length; // +1 = CW
-      for(const k of [0,-1,1,-2,2]){                       // 킥 테스트
+      for(const k of [0,-1,1,-2,2]){                       // 벽킥
         if(!hit(SHAPES[current.name][nxt],k)){
           current.rot=nxt; current.pos+=k; break;
         }
       }
       drawCurr();
     }
-    const soft=()=>move(0,1);
+    const soft = ()=>move(0,1);
     function hard(){
       eraseCurr(); const d=dropDist();
       current.pos+=d*cols; score+=d*2; drawCurr(); lockPiece(); hud();
@@ -262,7 +262,7 @@
       if(!canHold) return;
       eraseCurr(); clearGhost();
       if(!holdPiece){ holdPiece=current.name; newPiece(); }
-      else { [holdPiece,current.name]=[current.name,holdPiece];
+      else{ [holdPiece,current.name]=[current.name,holdPiece];
         current.pos=3; current.rot=0;
         if(hit(current.shape())) return gameOver();
         drawCurr();
@@ -270,7 +270,7 @@
       canHold=false; drawMini($('hold'),holdPiece);
     }
 
-    /* ========== 중력 & 타이머 ========== */
+    /* ===== 중력 ===== */
     function setGravity(){
       clearInterval(timer);
       timer=setInterval(()=>{
@@ -279,7 +279,7 @@
       },Math.max(100,baseInterval-(level-1)*50));
     }
 
-    /* ========== 시작 & 종료 ========== */
+    /* ===== 시작/종료 ===== */
     function startGame(){
       if(playing) return;
       playing=true;
@@ -302,7 +302,7 @@
 
     $('start').onclick=startGame;
 
-    /* ------- 키보드 ------- */
+    /* ===== 키보드 ===== */
     document.addEventListener('keydown',e=>{
       if(!playing) return;
       switch(e.key){
@@ -315,19 +315,18 @@
       }
     });
 
-    /* ------- 버튼(터치 + 클릭) ------- */
-    function bindButton(id,fn){
+    /* ===== 버튼(모바일/데스크톱 공통) ===== */
+    function bindButton(id, fn){
       const el=$(id); if(!el) return;
-      ['touchstart','click'].forEach(ev=>{
-        el.addEventListener(ev,e=>{
-          e.preventDefault(); if(playing||id==='start') fn();
-        });
-      });
+      el.addEventListener('pointerdown', e=>{
+        e.preventDefault();           // 1회만 실행
+        if(playing || id==='start') fn();
+      }, {passive:false});
     }
     bindButton('left', ()=>move(-1));
-    bindButton('right',()=>move(1));
+    bindButton('right', ()=>move(1));
     bindButton('down', soft);
-    bindButton('rotate', rotate);     // 🔄 버튼 ⇒ 시계방향 회전
+    bindButton('rotate', rotate);     // 🔄 버튼 → 90° 회전
     bindButton('drop', hard);
     bindButton('holdBtn', hold);
   });
